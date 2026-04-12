@@ -325,10 +325,10 @@ html, body {
 }
 
 /* Colores de los íconos basados en la imagen */
-.icon-resumen.total {background-color: #4728d118; color:  #4c4edde5; border: 1px solid #2110b675; }
 .icon-resumen.atrasados { background-color: var(--peligro-fondo); color: var(--peligro-texto); border: 1px solid #ee575744; }
-.icon-resumen.vencer { background-color: #fef3c7; color: #d97706; }
-.icon-resumen.al-dia { background-color: #dcfce7; color: #16a34a; }
+.icon-resumen.total     { background-color: #0070f11e; color: #3b82f6; border: 1px solid #3b82f6; }
+.icon-resumen.vencer    { background-color: #ffc0132f; color: var(--avatar-naranja); border: 1px solid var(--avatar-naranja); }
+.icon-resumen.al-dia    { background-color: #12a85127; color: var(--exito-texto); border: 1px solid var(--exito-texto); }
 
 /* TEXTOS DENTRO DEL CUADRITO */
 .card-resumen strong {
@@ -1420,6 +1420,9 @@ html, body {
 
 /* -------------------- MODAL EDITAR CLIENTE ----------------*/
 
+.detalle-cliente-modal{
+background-color: var(--fondo-tarjeta) !important;}
+
 /* 1. Fondo del Modal (Overlay) */
 .modal {
     display: none;
@@ -1508,8 +1511,8 @@ html, body {
 /* 7. Cajitas de los Inputs */
 .info-box-v3 {
     background: var(--fondo-input); /* Antes: #e2e8f0 */
-    padding: 5px 16px;
-    border-radius: 10px;
+    padding: 4px 16px;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
     transition: all 0.2s;
@@ -1539,6 +1542,7 @@ html, body {
 
 /* 8. Footer y Botones */
 .modal-footer-detalle {
+
     padding: 20px;
     background: var(--fondo-tarjeta); /* Antes: #fff */
     border-top: 1px solid var(--borde-suave); /* Antes: #e2e8f0 */
@@ -1557,20 +1561,17 @@ html, body {
 }
 
 .btn-confirmar-final {
-    background: var(--fondo-input); /* Antes: #e2e8f0 */
+    background: var(--color-primario); /* Antes: #e2e8f0 */
     border: 1px solid var(--borde-suave); /* Antes: #cbd5e1 */
-    padding: 16px;
-    border-radius: 18px;
+    padding: 8px;
+    border-radius: 10px;
     font-weight: 800;
-    color: var(--texto-principal); /* Antes: #1e293b */
+    color: #fff; /* Antes: #1e293b */
     font-size: 1rem;
     cursor: pointer;
     transition: background 0.2s;
 }
 
-.btn-confirmar-final:hover {
-    background: var(--borde-suave);
-}
 
 /* Scrollbar estética */
 .modal-body-scroll::-webkit-scrollbar { width: 5px; }
@@ -1809,10 +1810,11 @@ html, body {
 }
 
 .btn-cancelar {
-    background-color: #f3f4f6;
-    border: none;
+    background-color: var(--fondo-app);
+    border: var(--barra-estado);
     padding: 10px;
     border-radius: 8px;
     flex: 1;
     cursor: pointer;
+    color: var(--texto-secundario) !important;
 }
