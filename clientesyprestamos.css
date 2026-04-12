@@ -49,6 +49,8 @@ html, body {
     --avatar-naranja: #f59e0b;
     --avatar-rosa: #d946ef;
     --avatar-celeste: #06b6d4;
+
+    --barra-estado: #e2e2e2;
 }
 
 /* TEMA OSCURO (Adaptación profesional) */
@@ -80,6 +82,8 @@ html, body {
 
     --otros-fondo: #334155;
     --otros-texto: #cbd5e1;
+
+    --barra-estado: #233247;
 }
 
 
@@ -97,7 +101,7 @@ html, body {
 /* --- Contenido Principal --- */
 .main-content {
     flex-grow: 1; /* Ocupa todo el espacio restante */
-    padding: 0 30px; /* Dale aire a los costados */
+    padding: 0 60px; /* Dale aire a los costados */
     max-width: calc(100vw - 260px); /* Evita que se desborde */
     background-color: var(--fondo-app);
 }
@@ -180,7 +184,7 @@ html, body {
     color: white;
     border: none;
     height: 42px;
-    padding: 0 16px;
+    padding: 0 px;
     border-radius: 12px;
     font-weight: 600;
     display: flex;
@@ -188,7 +192,6 @@ html, body {
     gap: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
 }
 
 /* --- AJUSTES MOBILE --- */
@@ -504,7 +507,7 @@ html, body {
 
 /* HEADER DE LA TARJETA (Lo que siempre se ve) */
 .cliente-header {
-    padding: 14px 18px;
+    padding: 14px 22px;
     display: flex;
     align-items: center;
     gap: 15px;
@@ -575,7 +578,7 @@ html, body {
 .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 20px;
 }
 
@@ -598,6 +601,7 @@ html, body {
     padding: 12px 15px;
     border-radius: 12px;
     margin-bottom: 20px;
+    border: 1px solid var(--borde-suave);
 }
 
 .progreso-header {
@@ -612,7 +616,7 @@ html, body {
 
 .barra-fondo {
     height: 6px;
-    background: var(--borde-suave);
+    background: var(--barra-estado);
     border-radius: 10px;
     position: relative;
 }
@@ -628,10 +632,11 @@ html, body {
 .acciones-card {
     display: flex;
     gap: 10px;
+    justify-content: center;
+    align-items: center;
 }
 
 .btn-secundario-v2 {
-    flex: 1;
     padding: 12px;
     border-radius: 12px;
     font-size: 14px;
@@ -644,9 +649,40 @@ html, body {
     gap: 8px;
     transition: 0.2s;
     background-color: var(--otros-fondo);
-    color: var(--texto-principal);
+    color: var(--texto-principal);    
 }
 
+.btn-ver-detalles{
+    background-color: var(--borde-suave);
+    border: 1px solid var(--barra-estado);
+    width: 300px;
+    height: 42px;
+    display: flex;
+    justify-content: center;}
+
+.btn-cobrar{
+    display: flex;
+    justify-content: center;
+    width: 300px;
+    height: 42px;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.btn-otorgar{
+    display: flex;
+    justify-content: center;
+    width: 300px;
+    height: 42px;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.btn-eliminar{
+    display: flex;
+    justify-content: center;
+    width: 300px;
+    height: 42px;
+    box-shadow: 0 4px 15px rgba(241, 99, 99, 0.3);
+}
 
 /* --- BADGES DE ESTADO (Mapeados a tu paleta) --- */
 .badge-estado {
@@ -1140,6 +1176,22 @@ html, body {
     border: none;
     cursor: pointer;
     width: 100%;
+}
+
+
+
+.progreso-header-cobro {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#porcentajeCobro {
+    font-weight: 800;
+    color: #22c55e;
 }
 
 /*------------------------ MODAL DE VER DETALLES -----------------------------------*/
@@ -1706,5 +1758,61 @@ html, body {
     border-radius: 16px;
     font-weight: 700;
     color: var(--texto-principal); /* Antes: #1f2937 */
+    cursor: pointer;
+}
+
+/* Contenedor del modal (el fondo oscuro) */
+.modal-v2 {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro transparente */
+    z-index: 2000; /* Asegura que esté arriba de todo */
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px); /* Efecto de desenfoque opcional */
+}
+
+/* Cuando el modal tiene la clase 'active', se muestra */
+.modal-v2.active {
+    display: flex;
+}
+
+/* La tarjeta blanca dentro del modal */
+.modal-contenido-v2 {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-acciones {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-confirmar-eliminar {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    flex: 1;
+    cursor: pointer;
+}
+
+.btn-cancelar {
+    background-color: #f3f4f6;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    flex: 1;
     cursor: pointer;
 }
