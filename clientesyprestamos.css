@@ -971,7 +971,7 @@ html, body {
 .modal-titulo p { 
     margin: 5px 0 0; 
     color: var(--texto-secundario); /* Antes: #64748b */
-    font-size: 12px;
+    font-size: 11.5px;
     letter-spacing:0cap; 
 }
 
