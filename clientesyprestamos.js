@@ -135,11 +135,9 @@ function renderizarClientes(datos) {
     if (!listaContenedor) return;
     listaContenedor.innerHTML = '';
     
-    // Contador
     if (contadorTexto) contadorTexto.innerText = `${datos.length} clientes`;
 
     datos.forEach(cliente => { 
-        
         const prestamo = cliente.prestamos?.slice(-1)[0];
         const cuotasPagadas = prestamo?.cuotas_pagadas || 0;
         const cuotasTotales = prestamo?.cuotas_totales || 0;
@@ -149,17 +147,18 @@ function renderizarClientes(datos) {
             : 0;
         
         const nombreCompleto = `${cliente.nombre} ${cliente.apellido || ''}`;
-        const estadoLimpio = (cliente.estado || 'sin prestamo').toLowerCase().replace(/\s+/g, '-');
         
-        const iniciales = (cliente.nombre.charAt(0) + (cliente.apellido ? cliente.apellido.charAt(0) : '')).toUpperCase();
+        // CORRECCIÓN AQUÍ: Agregamos un valor por defecto para que no explote si el estado es null
+        const estadoRaw = cliente.estado || 'sin prestamo';
+        const estadoLimpio = estadoRaw.toLowerCase().replace(/\s+/g, '-');
         
-        const direccionCompleta = `${cliente.calle || ''} ${cliente.nro_calle || ''} (${cliente.barrio || ''})`;
+        const iniciales = ((cliente.nombre?.charAt(0) || '') + (cliente.apellido?.charAt(0) || '')).toUpperCase();        const direccionCompleta = `${cliente.calle || ''} ${cliente.nro_calle || ''} (${cliente.barrio || ''})`;
 
         const card = document.createElement('div');
         card.className = `cliente-card status-${estadoLimpio}`;
         
-        const esNuevo = cliente.estado === 'sin prestamo';
-        const esFinalizado = cliente.estado === 'finalizado';
+        const esNuevo = estadoRaw === 'sin prestamo';
+        const esFinalizado = estadoRaw === 'finalizado';
 
         const accionesHTML = `
             <div class="acciones-card">
@@ -178,12 +177,12 @@ function renderizarClientes(datos) {
                 <div class="cliente-avatar">${iniciales}</div>
                 <div class="cliente-info">
                     <h3>${nombreCompleto}</h3>
-                    <p>Adeuda: <span class="monto-adeuda">$ ${(cliente.monto_total || 0).toLocaleString()}</span></p>
+                    <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString()}</span></p>
                 </div>
                 
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div class="badge-estado badge-${estadoLimpio}">
-                        ${cliente.estado.toUpperCase()}
+                        ${estadoRaw.toUpperCase()}
                     </div>
                     <div class="chevron-detalle">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -195,64 +194,41 @@ function renderizarClientes(datos) {
 
             <div class="cliente-detalles">
                 <div class="info-grid">
-                    <div class="info-item"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="17" y2="15"/></svg> DNI:</strong> ${cliente.dni || '-'}</div>
-                    <div class="info-item"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.97-1.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Tel:</strong> ${cliente.telefono || '-'}</div>
-                    <div class="info-item"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Loc:</strong> ${direccionCompleta}</div>
-                    <div class="info-item"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12"/><path d="M2 12h20"/></svg> Job:</strong> ${cliente.ocupacion || '-'}</div>
+                    <div class="info-item"><strong>DNI:</strong> ${cliente.dni || '-'}</div>
+                    <div class="info-item"><strong>Tel:</strong> ${cliente.telefono || '-'}</div>
+                    <div class="info-item"><strong>Loc:</strong> ${direccionCompleta}</div>
+                    <div class="info-item"><strong>Job:</strong> ${cliente.ocupacion || '-'}</div>
                 </div>
                 
                 ${!esNuevo ? `
                     <div class="cuotas-progreso">
-<div class="progreso-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <span>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      $ ${(prestamo?.total_devolver || 0).toLocaleString()}
-    </span>
-    <span>${cuotasPagadas}/${cuotasTotales} cuotas <strong>${porcentaje}%</strong></span>
-</div>
+                        <div class="progreso-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>$ ${(prestamo?.total_devolver || 0).toLocaleString()}</span>
+                            <span>${cuotasPagadas}/${cuotasTotales} cuotas <strong>${porcentaje}%</strong></span>
+                        </div>
                         <div class="barra-fondo">
                             <div class="barra-completada" style="width: ${porcentaje}%"></div>
                         </div>
                     </div>
                 ` : ''}
-
                 ${accionesHTML} 
             </div>
         `; 
 
-        // EVENTOS
-
-        card.onclick = (e) => { 
-            if(!e.target.closest('button')) card.classList.toggle('expanded'); 
-        };
-
-        card.querySelector('.btn-ver-detalles').onclick = (e) => { 
-            e.stopPropagation(); 
-            abrirModalDetalles(cliente); 
-        };
+        card.onclick = (e) => { if(!e.target.closest('button')) card.classList.toggle('expanded'); };
+        card.querySelector('.btn-ver-detalles').onclick = (e) => { e.stopPropagation(); abrirModalDetalles(cliente); };
 
         if (esFinalizado) {
             const btnEliminar = card.querySelector('.btn-eliminar');
-            if (btnEliminar) {
-                btnEliminar.onclick = (e) => {
-                    e.stopPropagation();
-                    abrirModalEliminar(cliente);
-                };
-            }
+            if (btnEliminar) btnEliminar.onclick = (e) => { e.stopPropagation(); abrirModalEliminar(cliente); };
         } else {
             const btnAccion = card.querySelector('.btn-otorgar') || card.querySelector('.btn-cobrar');
-            if (btnAccion) {
-                btnAccion.onclick = (e) => {
-                    e.stopPropagation();
-                    esNuevo ? prepararOtorgar(cliente) : abrirModalCobro(cliente);
-                };
-            }
+            if (btnAccion) btnAccion.onclick = (e) => { e.stopPropagation(); esNuevo ? prepararOtorgar(cliente) : abrirModalCobro(cliente); };
         }
 
         listaContenedor.appendChild(card);
     });
 }
-
 
 
 let clienteAEliminarId = null;
@@ -566,43 +542,56 @@ async function eliminarPrestamo(prestamoId, clienteId) {
 }
 
 /* ==========================================
-   LÓGICA MODAL DETALLES
+   LÓGICA MODAL DETALLES (CORREGIDA)
    ========================================== */
 function abrirModalDetalles(cliente) {
+    if (!cliente) return;
     clienteSeleccionado = cliente; 
 
-    // 1. Llenar textos básicos (Usando nombres de Supabase)
-    document.getElementById('det-cliente-nombre').innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
-    document.getElementById('det-dni').innerText = cliente.dni || "N/A";
-    document.getElementById('det-tel').innerText = cliente.telefono || "N/A";
-    document.getElementById('det-ciudad').innerText = cliente.ciudad || "-";
-    document.getElementById('det-barrio').innerText = cliente.barrio || "-";
-    document.getElementById('det-calle').innerText = cliente.calle || "-";
-    document.getElementById('det-nro').innerText = cliente.nro_calle || "-";
-    document.getElementById('det-ocupacion').innerText = cliente.ocupacion || "-";
+    // 1. Textos en etiquetas (<span>, <h2>, etc.) - Usan .innerText
+    document.getElementById('det-cliente-nombre-cabecera').innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
     
-    // 2. Datos del préstamo
+    const estadoRaw = cliente.estado || 'sin prestamo';
+    const badgeEstado = document.getElementById('det-estado-badge');
+    badgeEstado.innerText = estadoRaw.toUpperCase();
+    badgeEstado.className = `badge-estado badge-${estadoRaw.toLowerCase().replace(/\s+/g, '-')}`;
+
+    // 2. Datos en INPUTS - !IMPORTANTE: Usan .value!
+    document.getElementById('det-dni').value = cliente.dni || "";
+    document.getElementById('det-tel').value = cliente.telefono || "";
+    document.getElementById('det-ciudad').value = cliente.ciudad || "";
+    document.getElementById('det-barrio').value = cliente.barrio || "";
+    document.getElementById('det-calle').value = cliente.calle || "";
+    document.getElementById('det-nro').value = cliente.nro_calle || "";
+    document.getElementById('det-ocupacion').value = cliente.ocupacion || "";
+    
+    // Campos de garantía (Seña / Producto)
+    document.getElementById('det-sena').value = cliente.garantia_producto || "-";
+    document.getElementById('det-monto').value = cliente.garantia_valor ? `$ ${cliente.garantia_valor.toLocaleString()}` : "-";
+    
+    // 3. Datos del préstamo
     const prestamo = cliente.prestamos?.slice(-1)[0];
     const montoPrestado = prestamo?.monto_prestado || 0;
     const montoTotal = prestamo?.total_devolver || 0;
     const cuotasPagas = prestamo?.cuotas_pagadas || 0;
     const cuotasTotales = prestamo?.cuotas_totales || 0;
+    const valorCuota = prestamo?.valor_cuota || 0;
 
-    document.getElementById('det-prestado').innerText = `$ ${montoPrestado.toLocaleString()}`;
-    document.getElementById('det-adevolver').innerText = `$ ${montoTotal.toLocaleString()}`;
-    document.getElementById('det-cuotas-resumen').innerText = `${cuotasPagas}/${cuotasTotales}`;
+    document.getElementById('det-prestado').value = `$ ${montoPrestado.toLocaleString()}`;
+    document.getElementById('det-adevolver').value = `$ ${montoTotal.toLocaleString()}`;
+    document.getElementById('det-cuotas-resumen').value = `${cuotasPagas} / ${cuotasTotales}`;
+    document.getElementById('det-valor-cuota').value = `$ ${valorCuota.toLocaleString()}`;
 
-    // 3. Lógica de la barra de progreso
+    // 4. Lógica de la barra de progreso (Elementos visuales usan .style y .innerText)
     const porcentaje = cuotasTotales > 0 ? (cuotasPagas / cuotasTotales) * 100 : 0;
     document.getElementById('det-progreso-barra').style.width = `${porcentaje}%`;
     document.getElementById('det-progreso-texto').innerText = `${cuotasPagas} DE ${cuotasTotales} CUOTAS PAGADAS`;
 
-    // 4. Limpiar historial (Para simplificar por ahora)
-    document.getElementById('historialCuotas').innerHTML = '<p style="text-align:center; padding:10px; color:gray;">Cargando historial...</p>';
+    // 5. Historial
+    document.getElementById('historialCuotas').innerHTML = '<p style="text-align:center; padding:10px; color:gray;">Historial actualizado</p>';
 
     document.getElementById('modalDetalles').classList.add('active');
 }
-
 
 // Botón para cerrar
 document.getElementById('btnCerrarDetalles').onclick = () => {
@@ -612,88 +601,72 @@ document.getElementById('btnCerrarDetalles').onclick = () => {
 
 
 
-/*---------------- LÓGICA EDITAR CLIENTE ------------- */
-
-// 1. Función para abrir el modal y cargar los datos
+/*---------------- LÓGICA EDITAR CLIENTE (CORREGIDA) ------------- */
 
 function abrirModalEditar(cliente) {
     if (!cliente) return;
+    clienteSeleccionado = cliente; 
 
-    // 1. Nombre y Apellido
-    const partesNombre = cliente.nombre.split(' ');
-    document.getElementById('edit-nombre').value = partesNombre[0] || "";
-    document.getElementById('edit-apellido').value = partesNombre.slice(1).join(' ') || "";
-
-    // 2. Datos básicos
+    // Mapeo exacto de los campos que vienen de Supabase a tus IDs de edición
+    document.getElementById('edit-nombre').value = cliente.nombre || "";
+    document.getElementById('edit-apellido').value = cliente.apellido || "";
     document.getElementById('edit-dni').value = cliente.dni || "";
-    document.getElementById('edit-tel').value = cliente.tel || "";
+    document.getElementById('edit-tel').value = cliente.telefono || "";
+    document.getElementById('edit-ciudad').value = cliente.ciudad || "";
+    document.getElementById('edit-barrio').value = cliente.barrio || "";
+    document.getElementById('edit-calle').value = cliente.calle || "";
+    document.getElementById('edit-nro').value = cliente.nro_calle || "";
     document.getElementById('edit-ocupacion').value = cliente.ocupacion || "";
+    document.getElementById('edit-sena').value = cliente.garantia_producto || "";
+    document.getElementById('edit-monto').value = cliente.garantia_valor || "";
 
-    // 3. LÓGICA PARA LA DIRECCIÓN (Desarmar el texto largo)
-    // Si los campos individuales no existen, intentamos sacarlos de cliente.direccion
-    if (cliente.direccion && cliente.direccion.includes(',')) {
-        const partesDir = cliente.direccion.split(','); // Divide por las comas
-        
-        // Ciudad: lo que está al final
-        document.getElementById('edit-ciudad').value = partesDir[2] ? partesDir[2].trim() : (cliente.ciudad || "");
-        
-        // Barrio: lo que está en el medio
-        document.getElementById('edit-barrio').value = partesDir[1] ? partesDir[1].trim() : (cliente.barrio || "");
-        
-        // Calle y Nro: lo que está al principio (ej: "Belgrano 654")
-        const calleNro = partesDir[0] ? partesDir[0].trim().split(' ') : [];
-        if (calleNro.length > 0) {
-            document.getElementById('edit-nro').value = calleNro.pop(); // Saca el último elemento (nro)
-            document.getElementById('edit-calle').value = calleNro.join(' '); // El resto es la calle
-        }
-    } else {
-        // Si no hay comas, cargamos lo que haya por las dudas
-        document.getElementById('edit-ciudad').value = cliente.ciudad || "";
-        document.getElementById('edit-barrio').value = cliente.barrio || "";
-        document.getElementById('edit-calle').value = cliente.calle || "";
-        document.getElementById('edit-nro').value = cliente.nro || "";
-    }
-
-    document.getElementById('modalEditarCliente').classList.add('active');
+    document.getElementById('modalEditar').classList.add('active');
 }
 
-// 2. Evento del botón "Editar cliente" que ya tenías en el Modal Detalle
-document.querySelector('.btn-editar-cliente').onclick = () => {
-    // Cerramos el modal de detalles y abrimos el de edición
-    document.getElementById('modalDetalles').classList.remove('active');
-    abrirModalEditar(clienteSeleccionado); // 'clienteSeleccionado' es el que cargaste en el modal de detalles
-};
+// Botón "Editar cliente" dentro del Modal de Detalles
+const btnIrAEditar = document.querySelector('.btn-editar-cliente');
+if (btnIrAEditar) {
+    btnIrAEditar.onclick = () => {
+        document.getElementById('modalDetalles').classList.remove('active');
+        abrirModalEditar(clienteSeleccionado);
+    };
+}
 
-// 3. Botón Guardar Cambios
-document.getElementById('btnGuardarEdicion').onclick = () => {
-    if (!clienteSeleccionado) return;
+// GUARDAR CAMBIOS (Actualización en Supabase)
+const formEditar = document.getElementById('formEditarCliente');
+if (formEditar) {
+    formEditar.onsubmit = async (e) => {
+        e.preventDefault();
+        if (!clienteSeleccionado) return;
 
-    // Capturamos los valores de los inputs
-    const nombre = document.getElementById('edit-nombre').value;
-    const apellido = document.getElementById('edit-apellido').value;
+        const nuevosDatos = {
+            nombre: document.getElementById('edit-nombre').value.trim(),
+            apellido: document.getElementById('edit-apellido').value.trim(),
+            dni: document.getElementById('edit-dni').value.trim(),
+            telefono: document.getElementById('edit-tel').value.trim(),
+            ciudad: document.getElementById('edit-ciudad').value.trim(),
+            barrio: document.getElementById('edit-barrio').value.trim(),
+            calle: document.getElementById('edit-calle').value.trim(),
+            nro_calle: document.getElementById('edit-nro').value.trim(),
+            ocupacion: document.getElementById('edit-ocupacion').value.trim(),
+            garantia_producto: document.getElementById('edit-sena').value.trim(),
+            garantia_valor: parseFloat(document.getElementById('edit-monto').value) || 0
+        };
 
-    // Actualizamos el objeto clienteSeleccionado
-    clienteSeleccionado.nombre = `${nombre} ${apellido}`;
-    clienteSeleccionado.dni = document.getElementById('edit-dni').value;
-    clienteSeleccionado.tel = document.getElementById('edit-tel').value;
-    clienteSeleccionado.ocupacion = document.getElementById('edit-ocupacion').value;
-    
-    // Guardamos los campos de dirección
-    clienteSeleccionado.ciudad = document.getElementById('edit-ciudad').value;
-    clienteSeleccionado.barrio = document.getElementById('edit-barrio').value;
-    clienteSeleccionado.calle = document.getElementById('edit-calle').value;
-    clienteSeleccionado.nro = document.getElementById('edit-nro').value;
+        const { error } = await supabaseClient
+            .from('clientes')
+            .update(nuevosDatos)
+            .eq('id', clienteSeleccionado.id);
 
-    // Actualizamos la dirección combinada (por si la usas en otros lados)
-    clienteSeleccionado.direccion = `${clienteSeleccionado.calle} ${clienteSeleccionado.nro}, ${clienteSeleccionado.barrio}, ${clienteSeleccionado.ciudad}`;
-
-    // Refrescar la lista de la pantalla principal
-    renderizarClientes(clientes);
-
-    // Cerrar el modal y avisar
-    document.getElementById('modalEditarCliente').classList.remove('active');
-    alert("¡Datos actualizados correctamente!");
-};
+        if (error) {
+            alert("Error al actualizar: " + error.message);
+        } else {
+            alert("✅ ¡Datos actualizados correctamente!");
+            document.getElementById('modalEditar').classList.remove('active');
+            await cargarClientesDB(); // Recarga la lista automáticamente
+        }
+    };
+}
 
 // 4. Botones Cerrar/Cancelar
 document.getElementById('btnCerrarEditar').onclick = () => document.getElementById('modalEditarCliente').classList.remove('active');

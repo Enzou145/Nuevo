@@ -62,7 +62,7 @@
                     </button>
                     <div class="titulo-seccion">
                         <h1>Clientes</h1>
-                        <span id="contadorClientes" class="subtitulo">0 clientes</span>
+                        <!--<span id="contadorClientes" class="subtitulo">0 clientes</span>-->
                     </div>
                 </div>
                 
@@ -74,10 +74,10 @@
                     </button>
 
                     <button class="btn-principal-v2" id="abrirModalNuevo">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3">
+                        <!-- <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                        </svg>-->
                         <span>Agregar Cliente</span>
                     </button>
                 </div>
@@ -305,142 +305,207 @@
 
 
 
-    <!-- MODAL DETALLE COMPLETO -->
-    <div id="modalDetalles" class="modal">
-        <div class="modal-content detalle-cliente-modal">
-            <div class="modal-header">
-                <div class="header-main">
-                    <div class="header-title-area">
-                        <h2>Detalle del Préstamo</h2>
-                        <div class="cliente-badge-row">
-                            <span id="det-cliente-nombre" class="nombre-destacado">Diego Ramírez</span>
-                            <span id="det-estado-badge" class="badge-atrasado">⚠️ Atrasado</span>
-                        </div>
-                    </div>
-                    <button class="btn-cerrar-modal" id="btnCerrarDetalles">×</button>
-                </div>
-            </div>
-
-            <div class="modal-body-scroll">
-                <!-- SECCIÓN: DATOS DEL CLIENTE -->
-                <div class="detalle-seccion">
-                    <h4 class="seccion-titulo">👤 DATOS DEL CLIENTE</h4>
-                    <div class="info-grid-detalle">
-                        <div class="info-box"><label>DNI</label><span id="det-dni">29870555</span></div>
-                        <div class="info-box"><label>Teléfono</label><span id="det-tel">+5491178901234</span></div>
-                        <div class="info-box"><label>Ciudad</label><span id="det-ciudad">Salta</span></div>
-                        <div class="info-box"><label>Barrio</label><span id="det-barrio">Alberdi</span></div>
-                        <div class="info-box"><label>Calle</label><span id="det-calle">Belgrano</span></div>
-                        <div class="info-box"><label>Nro.</label><span id="det-nro">654</span></div>
-                        <div class="info-box full"><label>Ocupación</label><span id="det-ocupacion">Albañil</span></div>
+<!-- MODAL DETALLE COMPLETO (REDISEÑADO) -->
+<div id="modalDetalles" class="modal">
+    <div class="modal-content detalle-cliente-modal">
+        <div class="modal-header-detalle">
+            <div class="header-main">
+                <div class="header-title-area">
+                    <h2>Detalle del Préstamo</h2>
+                    <div class="cliente-badge-row">
+                        <span id="det-cliente-nombre-cabecera" class="nombre-destacado">---</span>
+                        <span id="det-estado-badge" class="badge-atrasado">---</span>
                     </div>
                 </div>
-
-                <!-- SECCIÓN: RESUMEN DEL PRÉSTAMO -->
-                <div class="detalle-seccion">
-                    <h4 class="seccion-titulo">💳 RESUMEN DEL PRÉSTAMO</h4>
-                    <div class="info-grid-detalle">
-                        <div class="info-box"><label>Prestado</label><span id="det-prestado">$ 65.000</span></div>
-                        <div class="info-box"><label>A devolver</label><span id="det-adevolver">$ 78.000</span></div>
-                        <div class="info-box"><label>Interés</label><span>20%</span></div>
-                        <div class="info-box"><label>Cuotas</label><span id="det-cuotas-resumen">1/6</span></div>
-                        <div class="info-box"><label>Frecuencia</label><span>Mensual</span></div>
-                        <div class="info-box"><label>Valor cuota</label><span>$ 13.000</span></div>
-                        <div class="info-box"><label>Inicio</label><span>10/2/2026</span></div>
-                        <div class="info-box"><label>Fin</label><span>10/8/2026</span></div>
-                    </div>
-                </div>
-
-                <!-- SECCIÓN: PROGRESO Y CUOTAS -->
-                <div class="detalle-seccion">
-                    <div class="progreso-container">
-                        <div class="barra-progreso-bg">
-                            <div id="det-progreso-barra" class="barra-progreso-fill" style="width: 20%;"></div>
-                        </div>
-                        <p id="det-progreso-texto" class="progreso-texto">1 DE 6 CUOTAS PAGADAS</p>
-                    </div>
-
-                    <h4 class="seccion-titulo">🗓️ HISTORIAL DE CUOTAS</h4>
-                    <div id="historialCuotas" class="historial-lista">
-                        <!-- Las cuotas se generan con JS -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer-detalle">
-                <button class="btn-editar-cliente">Editar cliente</button>
+                <button class="btn-cerrar-modal" id="btnCerrarDetalles" onclick="document.getElementById('modalDetalles').classList.remove('active')">×</button>
             </div>
         </div>
-    </div>
 
-
-
-    <!-- MODAL EDITAR CLIENTE -->
-    <div id="modalEditarCliente" class="modal">
-        <div class="modal-content detalle-cliente-modal">
-            <div class="modal-handle"></div>
-            <div class="modal-header-detalle">
-                <div class="header-top">
-                    <div class="header-title-area">
-                        <h2>Editar Cliente</h2>
-                        <p style="color: #64748b; font-size: 0.85rem;">Modificá los datos del cliente</p>
+        <div class="modal-body-scroll">
+            <!-- SECCIÓN: DATOS DEL CLIENTE (Estilo "Nuevo Cliente") -->
+            <div class="detalle-seccion">
+                <h4 class="seccion-titulo">👤 DATOS DEL CLIENTE</h4>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>DNI</label>
+                        <input type="text" id="det-dni" readonly>
                     </div>
-                    <button class="btn-cerrar-modal" id="btnCerrarEditar">×</button>
+                    <div class="input-group">
+                        <label>TELÉFONO</label>
+                        <input type="text" id="det-tel" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>CIUDAD</label>
+                        <input type="text" id="det-ciudad" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>BARRIO</label>
+                        <input type="text" id="det-barrio" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>CALLE</label>
+                        <input type="text" id="det-calle" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>NRO.</label>
+                        <input type="text" id="det-nro" readonly>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>OCUPACIÓN</label>
+                        <input type="text" id="det-ocupacion" readonly>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label>SEÑA / PRODUCTO</label>
+                        <input type="text" id="det-sena" readonly>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>MONTO APROXIMADO</label>
+                        <input type="text" id="det-monto" readonly>
+                    </div>
                 </div>
             </div>
 
-            <div class="modal-body-scroll">
+            <!-- SECCIÓN: RESUMEN DEL PRÉSTAMO (Mismo estilo) -->
+            <div class="detalle-seccion">
+                <h4 class="seccion-titulo">💳 RESUMEN DEL PRÉSTAMO</h4>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>PRESTADO</label>
+                        <input type="text" id="det-prestado" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>A DEVOLVER</label>
+                        <input type="text" id="det-adevolver" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>CUOTAS PAGAS</label>
+                        <input type="text" id="det-cuotas-resumen" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>VALOR CUOTA</label>
+                        <input type="text" id="det-valor-cuota" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: PROGRESO -->
+            <div class="detalle-seccion">
+                <div class="progreso-container">
+                    <div class="barra-progreso-bg">
+                        <div id="det-progreso-barra" class="barra-progreso-fill"></div>
+                    </div>
+                    <p id="det-progreso-texto" class="progreso-texto">0 DE 0 CUOTAS PAGADAS</p>
+                </div>
+
+                <h4 class="seccion-titulo">🗓️ HISTORIAL DE CUOTAS</h4>
+                <div id="historialCuotas" class="historial-lista">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer-detalle">
+            <button class="btn-cancelar" onclick="document.getElementById('modalDetalles').classList.remove('active')">Cerrar</button>
+            <button class="btn-guardar-solo btn-editar-cliente">Editar Cliente</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL EDITAR CLIENTE -->
+<!-- MODAL EDITAR CLIENTE (Estructura para tu CSS + IDs para tu JS) -->
+<div id="modalEditar" class="modal">
+    <div class="detalle-cliente-modal">
+        <!-- Barrita estética superior (modal-handle) -->
+        <div class="modal-handle"></div>
+
+        <div class="modal-header-detalle">
+            <div class="header-top">
+                <div class="header-title-area">
+                    <h2>EDITAR DATOS DEL CLIENTE</h2>
+                </div>
+                <!-- ID MANTENIDO: btnCerrarEditar -->
+                <button type="button" id="btnCerrarEditar" class="btn-cerrar-modal" onclick="document.getElementById('modalEditar').classList.remove('active')">&times;</button>
+            </div>
+        </div>
+
+        <div class="modal-body-scroll">
+            <form id="formEditarCliente">
                 <div class="info-grid-detalle">
+                    
+                    <!-- Nombre y Apellido -->
                     <div class="info-box-v3">
-                        <label>NOMBRE *</label>
-                        <input type="text" id="edit-nombre">
+                        <label>NOMBRE</label>
+                        <input type="text" id="edit-nombre" required>
                     </div>
                     <div class="info-box-v3">
-                        <label>APELLIDO *</label>
-                        <input type="text" id="edit-apellido">
+                        <label>APELLIDO</label>
+                        <input type="text" id="edit-apellido" required>
+                    </div>
+
+                    <!-- DNI y Teléfono -->
+                    <div class="info-box-v3">
+                        <label>DNI</label>
+                        <input type="number" id="edit-dni" required>
                     </div>
                     <div class="info-box-v3">
-                        <label>DNI *</label>
-                        <input type="text" id="edit-dni">
+                        <label>CELULAR / WHATSAPP</label>
+                        <input type="tel" id="edit-tel" required>
+                    </div>
+
+                    <!-- Ciudad y Barrio -->
+                    <div class="info-box-v3">
+                        <label>CIUDAD</label>
+                        <input type="text" id="edit-ciudad" required>
                     </div>
                     <div class="info-box-v3">
-                        <label>TELÉFONO *</label>
-                        <input type="text" id="edit-tel">
-                    </div>
-                    <div class="info-box-v3">
-                        <label>CIUDAD *</label>
-                        <input type="text" id="edit-ciudad">
-                    </div>
-                    <div class="info-box-v3">
-                        <label>BARRIO *</label>
+                        <label>BARRIO</label>
                         <input type="text" id="edit-barrio">
                     </div>
+
+                    <!-- Calle y Nro -->
                     <div class="info-box-v3">
-                        <label>CALLE *</label>
+                        <label>CALLE</label>
                         <input type="text" id="edit-calle">
                     </div>
                     <div class="info-box-v3">
-                        <label>NRO. *</label>
+                        <label>NRO</label>
                         <input type="text" id="edit-nro">
                     </div>
+
+                    <!-- Ocupación (Ancho completo) -->
                     <div class="info-box-v3 full">
-                        <label>OCUPACIÓN *</label>
+                        <label>OCUPACIÓN / TRABAJO</label>
                         <input type="text" id="edit-ocupacion">
                     </div>
-                    <!-- Campos extra si los necesitas -->
+
+                    <!-- Seña y Monto (Como pediste, ancho completo) -->
                     <div class="info-box-v3 full">
                         <label>SEÑA / PRODUCTO</label>
-                        <input type="text" placeholder="Ej: Celular Samsung">
+                        <input type="text" id="edit-sena">
                     </div>
-                </div>
-            </div>
+                    <div class="info-box-v3 full">
+                        <label>MONTO APROXIMADO</label>
+                        <input type="number" id="edit-monto">
+                    </div>
 
-            <div class="modal-footer-detalle" style="display: flex; gap: 10px;">
-                <button class="btn-cancelar" id="btnCancelarEditar">Cancelar</button>
-                <button class="btn-confirmar-final" id="btnGuardarEdicion" style="flex: 1;">Guardar Cliente</button>
-            </div>
+                </div>
+
+                <div class="modal-footer-detalle">
+                    <!-- ID MANTENIDO: btnCancelarEditar -->
+                    <button type="button" id="btnCancelarEditar" class="btn-confirmar-final" style="background-color: #64748b; border: none;" onclick="document.getElementById('modalEditar').classList.remove('active')">
+                        CANCELAR
+                    </button>
+                    <!-- ID MANTENIDO: btnGuardarEdicion -->
+                    <button type="submit" id="btnGuardarEdicion" class="btn-confirmar-final" style="flex-grow: 1;">
+                        GUARDAR CAMBIOS
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
 
     <!-- MODAL OTORGAR PRÉSTAMO -->
@@ -448,7 +513,7 @@
         <div class="detalle-cliente-modal">
             <div class="modal-handle"></div>
 
-            <div class="modal-header-detalle">
+            <div class="modal-header-prestamo">
                 <div class="header-top">
                     <div class="header-title-area">
                         <h2>Otorgar Préstamo</h2>
@@ -538,7 +603,7 @@
                 </div>
             </div>
 
-            <div class="modal-footer-detalle">
+            <div class="modal-footer-prestamo">
                 <button class="btn-footer-secondary" onclick="cerrarModalOtorgar()">Cancelar</button>
                 <button class="btn-footer-primary btn-guardar-prestamo">Guardar Préstamo</button>
             </div>

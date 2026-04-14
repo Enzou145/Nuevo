@@ -130,8 +130,8 @@ html, body {
     color: white;
     border: none;
     width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    height: 30px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -184,7 +184,7 @@ html, body {
     color: white;
     border: none;
     height: 42px;
-    padding: 0 px;
+    padding: 0 5px;
     border-radius: 12px;
     font-weight: 600;
     display: flex;
@@ -970,7 +970,7 @@ html, body {
 
 .modal-titulo p { 
     margin: 5px 0 0; 
-    color: var(--avatar-rosa); /* Antes: #64748b */
+    color: var(--texto-secundario); /* Antes: #64748b */
     font-size: 11.5px;
     letter-spacing:0cap; 
 }
@@ -1015,7 +1015,7 @@ html, body {
     color: var(--texto-principal);
     border: 1px solid transparent;
     border-radius: 10px;
-    font-size: 12px;
+    font-size: 13px;
     outline: none;
 }
 
@@ -1230,6 +1230,9 @@ html, body {
     border: 1px solid rgba(255,255,255,0.6); /* FIJO: Brillo en el borde */
 }
 
+#modalDetalles{
+padding: 0;}
+
 /* 3. Header y Línea superior */
 .header-top-line {
     width: 45px;
@@ -1240,7 +1243,7 @@ html, body {
 }
 
 .header-main {
-    padding: 10px 0px;
+    padding: 15px 0px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -1263,7 +1266,7 @@ html, body {
 .nombre-destacado {
     color: var(--color-primario);
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .badge-atrasado {
@@ -1396,23 +1399,18 @@ html, body {
 .badge-cuota.pagada { background: var(--exito-fondo); color: var(--exito-texto); }
 .badge-cuota.pendiente { background: var(--borde-suave); color: var(--texto-secundario); }
 
-/* 9. Footer y Botón Editar */
-.modal-footer-detalle {
-    padding: 20px;
-    background: var(--fondo-tarjeta);
-    border-top: 1px solid var(--borde-suave);
-}
 
 .btn-editar-cliente {
     width: 100%;
-    background: var(--fondo-input);
     border: 1px solid var(--borde-suave);
-    padding: 16px;
-    border-radius: 10px;
+    padding: 12px;
     font-weight: 800;
-    color: var(--texto-principal);
-    font-size: 1.05rem;
     cursor: pointer;
+    flex: 1; 
+    background: var(--color-primario); /* Antes: #9494d6 */
+    color: #ffffff; /* FIJO: Siempre blanco para contraste */
+    border-radius: 10px;
+
 }
 
 /* Scrollbar estética */
@@ -1446,7 +1444,7 @@ background-color: var(--fondo-tarjeta) !important;}
     background: var(--fondo-app); /* Antes: #f1f3f6 */
     width: 100%;
     max-width: 480px; 
-    border-radius: 32px; 
+    border-radius: 20px !important; 
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1466,7 +1464,8 @@ background-color: var(--fondo-tarjeta) !important;}
 
 /* 4. Header */
 .modal-header-detalle {
-    padding: 15px 25px;
+    padding: 5px 25px;
+    border-bottom: 1px solid var(--borde-suave);
 }
 
 .header-top {
@@ -1542,15 +1541,13 @@ background-color: var(--fondo-tarjeta) !important;}
     padding: 0;
 }
 
-/* 8. Footer y Botones */
 .modal-footer-detalle {
-
-    padding: 20px;
-    background: var(--fondo-tarjeta); /* Antes: #fff */
-    border-top: 1px solid var(--borde-suave); /* Antes: #e2e8f0 */
     display: flex;
-    gap: 12px;
+    gap: 10px;
+    border-top: 1px solid var(--borde-suave);
+    width: 100%;
 }
+
 
 
 .btn-confirmar-final {
@@ -1560,9 +1557,10 @@ background-color: var(--fondo-tarjeta) !important;}
     border-radius: 10px;
     font-weight: 800;
     color: #fff; /* Antes: #1e293b */
-    font-size: 1rem;
+    font-size: 0.8rem;
     cursor: pointer;
     transition: background 0.2s;
+    margin-top: 15px;
 }
 
 
@@ -1609,9 +1607,6 @@ background-color: var(--fondo-tarjeta) !important;}
     margin: 12px auto 6px;
 }
 
-.modal-header-detalle {
-    padding: 10px 24px 20px;
-}
 
 .header-top {
     display: flex;
@@ -1727,12 +1722,6 @@ background-color: var(--fondo-tarjeta) !important;}
     color: var(--texto-principal); /* Antes: #1f2937 */
 }
 
-.modal-footer-detalle {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
 
 .btn-footer-primary {
     background: var(--color-primario);
