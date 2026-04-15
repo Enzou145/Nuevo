@@ -582,16 +582,83 @@ function abrirModalDetalles(cliente) {
     document.getElementById('det-cuotas-resumen').value = `${cuotasPagas} / ${cuotasTotales}`;
     document.getElementById('det-valor-cuota').value = `$ ${valorCuota.toLocaleString()}`;
 
-    // 4. Lógica de la barra de progreso (Elementos visuales usan .style y .innerText)
+    // 4. Lógica de la barra de progreso (CON COLORES DINÁMICOS)
+    const barra = document.getElementById('det-progreso-barra');
     const porcentaje = cuotasTotales > 0 ? (cuotasPagas / cuotasTotales) * 100 : 0;
-    document.getElementById('det-progreso-barra').style.width = `${porcentaje}%`;
-    document.getElementById('det-progreso-texto').innerText = `${cuotasPagas} DE ${cuotasTotales} CUOTAS PAGADAS`;
+    
+    barra.style.width = `${porcentaje}%`;
 
-    // 5. Historial
-    document.getElementById('historialCuotas').innerHTML = '<p style="text-align:center; padding:10px; color:gray;">Historial actualizado</p>';
+    // Cambiar color según el estado
+    const estadoLower = estadoRaw.toLowerCase();
+    
+    if (estadoLower.includes("al dia")) {
+        barra.style.backgroundColor = "#3b82f6"; // Azul
+    } else if (estadoLower.includes("finalizado")) {
+        barra.style.backgroundColor = "#22c55e"; // Verde
+    } else if (estadoLower.includes("atrasado")) {
+        barra.style.backgroundColor = "#ef4444"; // Rojo
+    } else {
+        barra.style.backgroundColor = "#94a3b8"; // Gris por defecto (si no tiene préstamo)
+    }
+
+    document.getElementById('det-progreso-texto').innerText = `${cuotasPagas} DE ${cuotasTotales} CUOTAS PAGADAS`;
+    // 5. Historial Dinámico (MODIFICADO PARA FUNCIONAR COMO LA IMAGEN)
+    const historialDiv = document.getElementById('historialCuotas');
+    historialDiv.innerHTML = ''; // Limpiar contenido previo
+
+    if (prestamo && cuotasTotales > 0) {
+        for (let i = 1; i <= cuotasTotales; i++) {
+            // Calcular fecha de cada cuota
+            let fechaCuota = new Date(prestamo.fecha_inicio + 'T00:00:00');
+            const intervalo = prestamo.intervalo_pago || 1;
+            const frecuencia = prestamo.frecuencia_pago || "Mensual";
+
+            if (i > 1) {
+                if (frecuencia === "Diario") fechaCuota.setDate(fechaCuota.getDate() + ((i - 1) * intervalo));
+                else if (frecuencia === "Semanal") fechaCuota.setDate(fechaCuota.getDate() + ((i - 1) * intervalo * 7));
+                else if (frecuencia === "Mensual") fechaCuota.setMonth(fechaCuota.getMonth() + ((i - 1) * intervalo));
+            }
+
+            const estaPagada = i <= cuotasPagas;
+
+            // Crear el elemento de la cuota con el estilo de la imagen
+            const item = document.createElement('div');
+            item.className = `cuota-item ${estaPagada ? 'pagada' : ''}`;
+            item.innerHTML = `
+                <div class="cuota-info">
+                    <p class="cuota-numero">Cuota ${i}</p>
+                    <p class="cuota-fecha">${fechaCuota.toLocaleDateString('es-AR')}</p>
+                </div>
+                <div class="cuota-monto-status">
+                    <p class="cuota-monto">$ ${valorCuota.toLocaleString('es-AR')}</p>
+                    <span class="badge-cuota ${estaPagada ? 'pagada' : 'pendiente'}">${estaPagada ? 'PAGADA' : 'PENDIENTE'}</span>
+                </div>
+            `;
+            historialDiv.appendChild(item);
+        }
+    } else {
+        historialDiv.innerHTML = '<p style="text-align:center; padding:10px; color:gray;">Sin préstamo activo</p>';
+    }
 
     document.getElementById('modalDetalles').classList.add('active');
 }
+
+
+// Función auxiliar para calcular las fechas del historial
+function calcularFechaParaCuota(fechaInicio, cuotaIndex, intervalo, frecuencia) {
+    let fecha = new Date(fechaInicio + 'T00:00:00');
+    if (cuotaIndex === 0) return fecha;
+
+    if (frecuencia === "Diario") {
+        fecha.setDate(fecha.getDate() + (cuotaIndex * intervalo));
+    } else if (frecuencia === "Semanal") {
+        fecha.setDate(fecha.getDate() + (cuotaIndex * intervalo * 7));
+    } else if (frecuencia === "Mensual") {
+        fecha.setMonth(fecha.getMonth() + (cuotaIndex * intervalo));
+    }
+    return fecha;
+}
+
 
 // Botón para cerrar
 document.getElementById('btnCerrarDetalles').onclick = () => {

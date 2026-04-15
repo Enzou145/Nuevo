@@ -50,7 +50,7 @@ html, body {
     --avatar-rosa: #d946ef;
     --avatar-celeste: #06b6d4;
 
-    --barra-estado: #e2e2e2;
+    --barra-estado: #bfcde1;
 }
 
 /* TEMA OSCURO (Adaptación profesional) */
@@ -1351,26 +1351,34 @@ padding: 0;}
     margin: 16px 0;
 }
 
+/* Contenedor principal de la barra */
 .barra-progreso-bg {
-    background: var(--borde-suave);
-    height: 10px;
-    border-radius: 10px;
-    overflow: hidden;
+    width: 100%;
+    height: 8px;           /* Grosor de la barra */
+    background-color: var(--barra-estado); /* ESTE ES EL FONDO GRIS que verás siempre */
+    border-radius: 8px;    /* Bordes redondeados */
+    overflow: hidden;       /* Para que la barra verde no se salga de los bordes */
+    margin-bottom: 8px;
+    position: relative;
 }
 
+/* La barrita verde que se mueve */
 .barra-progreso-fill {
-    background: var(--exito-texto);
     height: 100%;
+    width: 0%;              /* Empieza en 0, el JS le dará el ancho */
+    background-color: #22c55e; /* Color verde de éxito */
+    border-radius: 10px;
+    transition: width 0.5s ease; /* Para que se llene con una animación suave */
 }
 
+/* Texto de "X de X cuotas" */
 .progreso-texto {
-    color: var(--exito-texto);
-    text-align: center;
+    font-size: 11px;
     font-weight: 800;
-    font-size: 0.8rem;
-    margin-top: 12px;
+    color: var(--texto-secundario);
+    text-align: center;
+    text-transform: uppercase;
 }
-
 /* 8. Historial de Cuotas (Cards dentro de la lista) */
 .cuota-item {
     background: var(--fondo-input);
@@ -1416,6 +1424,88 @@ padding: 0;}
 /* Scrollbar estética */
 .modal-body-scroll::-webkit-scrollbar { width: 5px; }
 .modal-body-scroll::-webkit-scrollbar-thumb { background: var(--borde-suave); border-radius: 10px; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Estilos para el historial del modal detalles */
+.det-fechas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.fecha-box {
+    background: var(--fondo-input);
+    padding: 12px 15px;
+    border-radius: 12px;
+}
+
+.fecha-box label {
+    font-size: 10px;
+    color: var(--texto-secundario);
+    font-weight: 700;
+    display: block;
+    text-transform: none;
+}
+
+.fecha-box span {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--texto-principal);
+}
+
+.progreso-container-v4 {
+    margin: 20px 0;
+}
+
+.cuota-item {
+    background: var(--fondo-input);
+    padding: 12px 20px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    border-left: 5px solid transparent;
+}
+
+.cuota-item.pagada {
+    border-left-color: #22c55e;
+    background: #f0fdf4; /* Un toque verde muy suave si está paga */
+}
+
+.tema-oscuro .cuota-item.pagada { background: rgba(34, 197, 94, 0.1); }
+
+.cuota-info p { margin: 0; }
+.cuota-numero { font-weight: 700; color: var(--texto-principal); font-size: 14px; }
+.cuota-fecha { font-size: 12px; color: var(--texto-secundario); }
+
+.cuota-monto-status { display: flex; align-items: center; gap: 15px; }
+.cuota-monto { font-weight: 800; color: var(--texto-principal); }
+
+.badge-cuota {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.badge-cuota.pagada { background: #dcfce7; color: #16a34a; }
+.badge-cuota.pendiente { background: #e2e8f0; color: #64748b; }
 
 
 /* -------------------- MODAL EDITAR CLIENTE ----------------*/
@@ -1546,6 +1636,7 @@ background-color: var(--fondo-tarjeta) !important;}
     gap: 10px;
     border-top: 1px solid var(--borde-suave);
     width: 100%;
+    padding: 18px;
 }
 
 
