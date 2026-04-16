@@ -573,25 +573,25 @@ html, body {
 
 /* --- ESTADO: AL DÍA (AZUL) --- */
 .status-al-dia { border-left-color: #3b82f6 !important; }
-.status-al-dia .cliente-avatar { background-color: #3b82f6 !important; }
+.status-al-dia .cliente-avatar { background-color: #3b82f6 !important; color: var(--fondo-tarjeta);}
 .status-al-dia .barra-completada { background-color: #3b82f6 !important; }
 .status-al-dia .badge-estado { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
 
 /* --- ESTADO: ATRASADO (ROJO) --- */
 .status-atrasado { border-left-color: var(--peligro-texto) !important; }
-.status-atrasado .cliente-avatar { background-color: var(--peligro-texto) !important; }
+.status-atrasado .cliente-avatar { background-color: var(--peligro-texto) !important; color: var(--fondo-tarjeta);}
 .status-atrasado .barra-completada { background-color: var(--peligro-texto) !important; }
 
 /* --- ESTADO: FINALIZADO (VERDE) --- */
 .status-finalizado { border-left-color: var(--exito-texto) !important; }
-.status-finalizado .cliente-avatar { background-color: var(--exito-texto) !important; }
+.status-finalizado .cliente-avatar { background-color: var(--exito-texto) !important; color: var(--fondo-tarjeta);}
 .status-finalizado .barra-completada { background-color: var(--exito-texto) !important; }
 
 /* --- ESTADO: SIN PRÉSTAMO (BLANCO) --- */
 .status-sin-prestamo { border-left: 6px solid #e6e6e6 !important; }
-.status-sin-prestamo .cliente-avatar { background-color: #e6e6e6!important; color: var(--fondo-tarjeta); }
+.status-sin-prestamo .cliente-avatar { background-color: #cecece!important; color: var(--fondo-tarjeta); }
 .status-sin-prestamo .barra-completada { background-color: #f59e0b !important; }
-.status-sin-prestamo .badge-estado { background: rgba(194, 194, 194, 0.349); color: #e6e6e6; border:1px solid #e6e6e63b;}
+.status-sin-prestamo .badge-estado { background: rgba(167, 166, 166, 0.5); color: #ffffff; border:1px solid #e6e6e63b;}
 
 
 /* --- ESTADO: VENCE MAÑANA (NARANJA) --- */
