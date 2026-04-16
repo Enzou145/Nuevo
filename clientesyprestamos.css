@@ -588,7 +588,7 @@ html, body {
 .status-finalizado .barra-completada { background-color: var(--exito-texto) !important; }
 
 /* --- ESTADO: SIN PRÉSTAMO (BLANCO) --- */
-.status-sin-prestamo { border-left: 6px solid #e6e6e6 !important; }
+.status-sin-prestamo { border-left: 6px solid #cecece !important; }
 .status-sin-prestamo .cliente-avatar { background-color: #cecece!important; color: var(--fondo-tarjeta); }
 .status-sin-prestamo .barra-completada { background-color: #f59e0b !important; }
 .status-sin-prestamo .badge-estado { background: rgba(167, 166, 166, 0.5); color: #ffffff; border:1px solid #e6e6e63b;}
