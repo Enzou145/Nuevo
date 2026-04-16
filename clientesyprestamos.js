@@ -97,6 +97,48 @@ async function cargarClientesDB() {
     }
 
     clientes = data || [];
+
+const hoy = new Date();
+hoy.setHours(0, 0, 0, 0);
+
+for (const cliente of clientes) {
+    const prestamo = cliente.prestamos?.[0];
+    if (!prestamo || cliente.estado === 'finalizado' || cliente.estado === 'sin prestamo') continue;
+
+    const pagadas = prestamo.cuotas_pagadas || 0;
+    const totales = prestamo.cuotas_totales || 0;
+    if (pagadas >= totales) continue;
+
+    // Calcular fecha de próxima cuota
+    let fechaProxima = new Date(prestamo.fecha_inicio + 'T00:00:00');
+    const intervalo = prestamo.intervalo_pago || 1;
+    const frecuencia = prestamo.frecuencia_pago || 'Mensual';
+    const proximaCuota = pagadas + 1;
+
+    if (frecuencia === 'Diario') fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo));
+    else if (frecuencia === 'Semanal') fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo * 7));
+    else if (frecuencia === 'Mensual') fechaProxima.setMonth(fechaProxima.getMonth() + (proximaCuota * intervalo));
+
+    const mañana = new Date(hoy);
+    mañana.setDate(mañana.getDate() + 1);
+
+    let nuevoEstado;
+    if (fechaProxima < hoy) {
+        nuevoEstado = 'atrasado';
+    } else if (fechaProxima.toDateString() === mañana.toDateString()) {
+        nuevoEstado = 'vence mañana';
+    } else {
+        nuevoEstado = 'al dia';
+    }
+
+
+    // Solo actualiza si cambió el estado
+    if (cliente.estado !== nuevoEstado) {
+        await supabaseClient.from('clientes').update({ estado: nuevoEstado }).eq('id', cliente.id);
+        cliente.estado = nuevoEstado; // Actualiza local también
+    }
+}
+
     renderizarClientes(clientes);
     
     // Actualizar contador
@@ -204,7 +246,7 @@ function renderizarClientes(datos) {
                     <div class="cuotas-progreso">
                         <div class="progreso-header" style="display:flex; justify-content:space-between; align-items:center;">
                             <span>$ ${(prestamo?.total_devolver || 0).toLocaleString()}</span>
-                            <span>${cuotasPagadas}/${cuotasTotales} cuotas <strong>${porcentaje}%</strong></span>
+                            <span> ${cuotasPagadas} DE ${cuotasTotales} cuotas    <strong>${porcentaje}%</strong></span>
                         </div>
                         <div class="barra-fondo">
                             <div class="barra-completada" style="width: ${porcentaje}%"></div>
@@ -394,24 +436,17 @@ function abrirModalCobro(cliente) {
     clienteSeleccionado = cliente;
     cuotasAPagar = 1;
 
-    document.getElementById('cobroMonto').innerText = `$ ${prestamo.monto_prestado.toLocaleString()}`;
-    document.getElementById('cobroTotal').innerText = `$ ${prestamo.total_devolver.toLocaleString()}`;
-    document.getElementById('cobroCuota').innerText = `$ ${prestamo.valor_cuota.toLocaleString()}`;
-document.getElementById('cobroProgreso').innerText = `${pagadas}/${totales} cuotas`;
+document.getElementById('cobroMonto').innerText = `$ ${prestamo.monto_prestado.toLocaleString()}`;
+document.getElementById('cobroTotal').innerText = `$ ${prestamo.total_devolver.toLocaleString()}`;
+document.getElementById('cobroCuota').innerText = `$ ${prestamo.valor_cuota.toLocaleString()}`;
+document.getElementById('cobroProgreso').innerText = `${pagadas}/${totales}`;
     const restantes = totales - pagadas;
 
-    const btnPagarTodo = document.getElementById('btnPagarTodo');
-    if (restantes > 0) {
-        btnPagarTodo.innerText = `Pagar todo (${restantes} cuotas — $ ${(restantes * prestamo.valor_cuota).toLocaleString()})`;
-        btnPagarTodo.style.display = "block";
-    } else {
-        btnPagarTodo.style.display = "none";
-    }
 
     actualizarCalculoCobro();
     modalCobro.classList.add('active');
 
-    document.getElementById('textoProgresoCobro').innerText = `${pagadas}/${totales} cuotas`;
+    document.getElementById('textoProgresoCobro').innerText = `${pagadas} DE ${totales} cuotas`;
     document.getElementById('porcentajeCobro').innerText = `${Math.round(porcentaje)}%`;
 
     const porcentajeEl = document.getElementById('porcentajeCobro');
@@ -455,16 +490,6 @@ document.getElementById('btnMenos').onclick = () => {
 };
 
 
-document.getElementById('btnPagarTodo').onclick = () => {
-    const prestamo = clienteSeleccionado.prestamos?.[0];
-    if (!prestamo) return;
-
-    const restantes = prestamo.cuotas_totales - prestamo.cuotas_pagadas;
-
-    cuotasAPagar = restantes;
-
-    actualizarCalculoCobro();
-};
 
 // Botón Confirmar Pago (Para cerrar y guardar)
 document.querySelector('.btn-confirmar-final').onclick = async () => {
@@ -580,7 +605,7 @@ function abrirModalDetalles(cliente) {
     document.getElementById('det-prestado').value = `$ ${montoPrestado.toLocaleString()}`;
     document.getElementById('det-adevolver').value = `$ ${montoTotal.toLocaleString()}`;
     document.getElementById('det-cuotas-resumen').value = `${cuotasPagas} / ${cuotasTotales}`;
-    document.getElementById('det-valor-cuota').value = `$ ${valorCuota.toLocaleString()}`;
+    document.getElementById('det-valor-cuota').value = `$ ${Math.round(valorCuota).toLocaleString('es-AR')}`;
 
     // 4. Lógica de la barra de progreso (CON COLORES DINÁMICOS)
     const barra = document.getElementById('det-progreso-barra');
@@ -597,9 +622,13 @@ function abrirModalDetalles(cliente) {
         barra.style.backgroundColor = "#22c55e"; // Verde
     } else if (estadoLower.includes("atrasado")) {
         barra.style.backgroundColor = "#ef4444"; // Rojo
-    } else {
+    }  else if (estadoLower.includes("vence")) {
+    barra.style.backgroundColor = "#f59e0b"; // Naranja
+}
+    else {
         barra.style.backgroundColor = "#94a3b8"; // Gris por defecto (si no tiene préstamo)
     }
+    
 
     document.getElementById('det-progreso-texto').innerText = `${cuotasPagas} DE ${cuotasTotales} CUOTAS PAGADAS`;
     // 5. Historial Dinámico (MODIFICADO PARA FUNCIONAR COMO LA IMAGEN)
@@ -613,11 +642,9 @@ function abrirModalDetalles(cliente) {
             const intervalo = prestamo.intervalo_pago || 1;
             const frecuencia = prestamo.frecuencia_pago || "Mensual";
 
-            if (i > 1) {
-                if (frecuencia === "Diario") fechaCuota.setDate(fechaCuota.getDate() + ((i - 1) * intervalo));
-                else if (frecuencia === "Semanal") fechaCuota.setDate(fechaCuota.getDate() + ((i - 1) * intervalo * 7));
-                else if (frecuencia === "Mensual") fechaCuota.setMonth(fechaCuota.getMonth() + ((i - 1) * intervalo));
-            }
+            if (frecuencia === "Diario") fechaCuota.setDate(fechaCuota.getDate() + (i * intervalo));
+            else if (frecuencia === "Semanal") fechaCuota.setDate(fechaCuota.getDate() + (i * intervalo * 7));
+            else if (frecuencia === "Mensual") fechaCuota.setMonth(fechaCuota.getMonth() + (i * intervalo));
 
             const estaPagada = i <= cuotasPagas;
 
@@ -735,10 +762,17 @@ if (formEditar) {
     };
 }
 
-// 4. Botones Cerrar/Cancelar
-document.getElementById('btnCerrarEditar').onclick = () => document.getElementById('modalEditarCliente').classList.remove('active');
-document.getElementById('btnCancelarEditar').onclick = () => document.getElementById('modalEditarCliente').classList.remove('active');
 
+// 4. Botones Cerrar/Cancelar (CORREGIDO)
+const modalEdicion = document.getElementById('modalEditar');
+
+document.getElementById('btnCerrarEditar').onclick = () => {
+    modalEdicion.classList.remove('active');
+};
+
+document.getElementById('btnCancelarEditar').onclick = () => {
+    modalEdicion.classList.remove('active');
+};
 
 
 
@@ -761,6 +795,10 @@ function prepararOtorgar(cliente) {
         else elNombre.innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
     }
 
+    // Agrega esto dentro de prepararOtorgar(), después de donde ya llenas oto-nombre
+    const subNombre = document.getElementById('oto-nombre-sub');
+    if (subNombre) subNombre.innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
+
     // Fecha hoy
     const inputFecha = document.getElementById('oto-fecha-inicio');
     if(inputFecha) inputFecha.valueAsDate = new Date();
@@ -769,11 +807,23 @@ function prepararOtorgar(cliente) {
     calcularPrestamo();
 }
 
+
+function seleccionarFrecuencia(btn) {
+    document.querySelectorAll('#modalOtorgar .oto-frec-btn').forEach(b => b.classList.remove('oto-frec-active'));
+    btn.classList.add('oto-frec-active');
+    document.getElementById('oto-frec-tipo').value = btn.dataset.value;
+    calcularPrestamo();
+}
+
 // ESTA FUNCIÓN ES LA QUE SE EJECUTA AL DARLE AL BOTÓN "GUARDAR PRÉSTAMO"
 async function confirmarOtorgarPrestamo() {
     if (!clienteSeleccionado) return;
 
-    const montoPrestado = parseFloat(document.getElementById('oto-monto').value) || 0;
+      // CORRECCIÓN: Quitamos los puntos antes de convertir a número
+    const montoRaw = document.getElementById('oto-monto').value;
+    const montoPrestado = parseFloat(montoRaw.replace(/\./g, '')) || 0; 
+    
+
     const interes = parseFloat(document.getElementById('oto-interes').value) || 0;
     const cuotas = parseInt(document.getElementById('oto-cuotas').value) || 1;
     const cadaX = parseInt(document.getElementById('oto-frec-valor').value) || 1;
@@ -855,39 +905,108 @@ function ajustar(id, cambio) {
     calcularPrestamo(); // Recalcula automáticamente al tocar + o -
 }
 
+
+
+
+// 1. Función para poner puntos automáticamente
+function formatearMiles(input) {
+    // Quitamos cualquier caracter que no sea número
+    let valor = input.value.replace(/\D/g, "");
+    // Agregamos los puntos
+    valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    input.value = valor;
+    // Llamamos al cálculo
+    calcularPrestamo();
+}
+
+// 2. Función calcularPrestamo corregida
 function calcularPrestamo() {
-    // Captura de valores (Asegúrate que los IDs coincidan con tu HTML)
-    const monto = parseFloat(document.getElementById('oto-monto').value) || 0;
+    const montoInput = document.getElementById('oto-monto');
+    // Obtenemos el valor numérico real (quitando los puntos para calcular)
+    const monto = parseFloat(montoInput.value.replace(/\./g, '')) || 0;
+    
     const interes = parseFloat(document.getElementById('oto-interes').value) || 0;
     const cuotas = parseInt(document.getElementById('oto-cuotas').value) || 1;
     const cadaX = parseInt(document.getElementById('oto-frec-valor').value) || 1;
     const frecuencia = document.getElementById('oto-frec-tipo').value;
     const fechaInicioStr = document.getElementById('oto-fecha-inicio').value;
 
-    // 1. Cálculos de Dinero
     const totalADevolver = monto + (monto * (interes / 100));
     const valorCuota = totalADevolver / cuotas;
 
-    // 2. Cálculo de Fecha Fin (Lógica de calendario)
     if (fechaInicioStr) {
         let fechaFin = new Date(fechaInicioStr + 'T00:00:00');
         
-        // El préstamo termina después de (cuotas - 1) intervalos
-        for (let i = 1; i < cuotas; i++) {
-            if (frecuencia === "Diario") {
-                fechaFin.setDate(fechaFin.getDate() + cadaX);
-            } else if (frecuencia === "Semanal") {
-                fechaFin.setDate(fechaFin.getDate() + (cadaX * 7));
-            } else if (frecuencia === "Mensual") {
-                fechaFin.setMonth(fechaFin.getMonth() + cadaX);
-            }
+        // CORRECCIÓN DE FECHA: Ahora calculamos el fin sumando todos los intervalos
+        // Si hay 1 cuota diaria, se suma 1 día.
+        if (frecuencia === "Diario") {
+            fechaFin.setDate(fechaFin.getDate() + (cuotas * cadaX));
+        } else if (frecuencia === "Semanal") {
+            fechaFin.setDate(fechaFin.getDate() + (cuotas * cadaX * 7));
+        } else if (frecuencia === "Mensual") {
+            fechaFin.setMonth(fechaFin.getMonth() + (cuotas * cadaX));
         }
-        document.getElementById('oto-fecha-fin').value = fechaFin.toISOString().split('T')[0];    }
+        
+        document.getElementById('oto-fecha-fin').value = fechaFin.toISOString().split('T')[0];
+    }
 
-    // 3. Mostrar resultados en el cuadro lila (Campos calculados)
     document.getElementById('res-total').innerText = `$ ${totalADevolver.toLocaleString('es-AR')}`;
-    document.getElementById('res-cuota').innerText = `$ ${valorCuota.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`;
+    document.getElementById('res-cuota').innerText = `$ ${Math.round(valorCuota).toLocaleString('es-AR')}`;
 }
+
+
+
+
+
+
+
+
+
+/* ==========================================
+   FILTRO DROPDOWN
+   ========================================== */
+let filtroEstadoActivo = 'todos';
+
+const filtroBtn = document.getElementById('filtroBtn');
+const filtroMenu = document.getElementById('filtroMenu');
+const filtroLabel = document.getElementById('filtroLabel');
+
+filtroBtn.onclick = (e) => {
+    e.stopPropagation();
+    filtroMenu.classList.toggle('open');
+};
+
+document.addEventListener('click', () => filtroMenu.classList.remove('open'));
+
+document.querySelectorAll('.filtro-opcion').forEach(opcion => {
+    opcion.onclick = (e) => {
+        e.stopPropagation();
+        filtroEstadoActivo = opcion.dataset.estado;
+        filtroLabel.textContent = opcion.textContent.trim();
+
+        document.querySelectorAll('.filtro-opcion').forEach(o => o.classList.remove('active'));
+        opcion.classList.add('active');
+
+        filtroMenu.classList.remove('open');
+        aplicarFiltros();
+    };
+});
+
+// Modifica tu buscador también para usar esta función
+document.getElementById('buscadorClientes').addEventListener('input', aplicarFiltros);
+
+function aplicarFiltros() {
+    const texto = document.getElementById('buscadorClientes').value.toLowerCase();
+    const filtrados = clientes.filter(c => {
+        const nombre = `${c.nombre} ${c.apellido || ''}`.toLowerCase();
+        const coincideTexto = nombre.includes(texto) || (c.dni || '').includes(texto);
+        const estado = (c.estado || 'sin prestamo').toLowerCase();
+        const coincideEstado = filtroEstadoActivo === 'todos' || estado === filtroEstadoActivo;
+        return coincideTexto && coincideEstado;
+    });
+    renderizarClientes(filtrados);
+}
+
 
 /* ==========================================
    6. INICIO DE LA APP

@@ -93,8 +93,32 @@
                     </svg>
                     <input type="text" id="buscadorClientes" placeholder="Buscar cliente...">
                 </div>
-            </section>
 
+                <!-- DROPDOWN FILTRO -->
+                <div class="filtro-dropdown-wrap" id="filtroWrap">
+                    <button class="filtro-dropdown-btn" id="filtroBtn">
+                        <span id="filtroLabel">Todos</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <ul class="filtro-menu" id="filtroMenu">
+                        <li class="filtro-opcion active" data-estado="todos">Todos</li>
+                        <li class="filtro-opcion" data-estado="al dia">
+                            <span class="dot-filtro azul"></span> Al día
+                        </li>
+                        <li class="filtro-opcion" data-estado="vence mañana">
+                            <span class="dot-filtro naranja"></span> Vence mañana
+                        </li>
+                        <li class="filtro-opcion" data-estado="atrasado">
+                            <span class="dot-filtro rojo"></span> Atrasado
+                        </li>
+                        <li class="filtro-opcion" data-estado="finalizado">
+                            <span class="dot-filtro verde"></span> Finalizado
+                        </li>
+                    </ul>
+                </div>
+            </section>
             
 
             <!-- 3. TARJETAS DE RESUMEN (Estadísticas) -->
@@ -250,15 +274,15 @@
                 <!-- Grid de Resumen (Las 4 tarjetitas grises) -->
                 <div class="resumen-cobro-grid">
                     <div class="resumen-item">
-                        <span>MONTO</span>
+                        <span>MONTO PRESTADO</span>
                         <p id="cobroMonto">$ 65.000</p>
                     </div>
                     <div class="resumen-item">
-                        <span>TOTAL</span>
+                        <span>TOTAL A DEVOLVER</span>
                         <p id="cobroTotal">$ 78.000</p>
                     </div>
                     <div class="resumen-item">
-                        <span>CUOTA</span>
+                        <span>VALOR CUOTA</span>
                         <p id="cobroCuota">$ 13.000</p>
                     </div>
                     <div class="resumen-item">
@@ -279,7 +303,7 @@
                 
                 <!-- Selector de Cantidad -->
                 <div class="control-pago">
-                    <label>Cantidad de cuotas a pagar</label>
+                    <label>CUOTAS A PAGAR</label>
                     <div class="selector-cantidad">
                         <button class="btn-step" id="btnMenos">-</button>
                         <div class="valor-display" id="cantidadCuotas">1</div>
@@ -289,14 +313,14 @@
 
                 <!-- Caja de Total a Pagar -->
                 <div class="total-a-pagar-box">
-                    <label>Total a pagar</label>
+                    <label>TOTAL A PAGAR</label>
                     <div class="monto-final" id="montoFinalPagar">$ 13.000</div>
                 </div>
             </div>
 
             <!-- Footer con Botones -->
-            <div class="modal-footer">
-                <button class="btn-pagar-todo" id="btnPagarTodo">Pagar todo (5 cuotas — $ 65.000)</button>
+            <div class="modal-footerr-">
+                <button class="btn-cancelar-finall">CANCELAR</button>
                 <button class="btn-confirmar-final">CONFIRMAR PAGO</button>
             </div>
         </div>
@@ -414,202 +438,196 @@
 
 
 <!-- MODAL EDITAR CLIENTE -->
-<!-- MODAL EDITAR CLIENTE (Estructura para tu CSS + IDs para tu JS) -->
-<div id="modalEditar" class="modal">
-    <div class="detalle-cliente-modal">
-        <!-- Barrita estética superior (modal-handle) -->
-        <div class="modal-handle"></div>
-
-        <div class="modal-header-detalle">
-            <div class="header-top">
-                <div class="header-title-area">
-                    <h2>EDITAR DATOS DEL CLIENTE</h2>
-                </div>
-                <!-- ID MANTENIDO: btnCerrarEditar -->
-                <button type="button" id="btnCerrarEditar" class="btn-cerrar-modal" onclick="document.getElementById('modalEditar').classList.remove('active')">&times;</button>
+<!-- MODAL EDITAR CLIENTE (ESTILO UNIFICADO) -->
+<div class="modal-overlay" id="modalEditar">
+    <div class="modal-container">
+        <!-- HEADER -->
+        <div class="modal-header">
+            <div class="modal-titulo">
+                <h2>Editar Cliente</h2>
+                <p>Modifica los datos del cliente seleccionado</p>
             </div>
+            <button class="btn-cerrar-modal" id="btnCerrarEditar">&times;</button>
         </div>
 
-        <div class="modal-body-scroll">
+        <!-- CUERPO (Igual al de Nuevo Cliente) -->
+        <div class="modal-body">
             <form id="formEditarCliente">
-                <div class="info-grid-detalle">
-                    
-                    <!-- Nombre y Apellido -->
-                    <div class="info-box-v3">
-                        <label>NOMBRE</label>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Nombre *</label>
                         <input type="text" id="edit-nombre" required>
                     </div>
-                    <div class="info-box-v3">
-                        <label>APELLIDO</label>
+                    <div class="input-group">
+                        <label>Apellido *</label>
                         <input type="text" id="edit-apellido" required>
                     </div>
-
-                    <!-- DNI y Teléfono -->
-                    <div class="info-box-v3">
-                        <label>DNI</label>
-                        <input type="number" id="edit-dni" required>
+                    <div class="input-group">
+                        <label>DNI *</label>
+                        <input type="text" id="edit-dni" required>
                     </div>
-                    <div class="info-box-v3">
-                        <label>CELULAR / WHATSAPP</label>
-                        <input type="tel" id="edit-tel" required>
+                    <div class="input-group">
+                        <label>TELÉFONO *</label>
+                        <input type="text" id="edit-tel" required>
                     </div>
-
-                    <!-- Ciudad y Barrio -->
-                    <div class="info-box-v3">
-                        <label>CIUDAD</label>
+                    <div class="input-group">
+                        <label>CIUDAD *</label>
                         <input type="text" id="edit-ciudad" required>
                     </div>
-                    <div class="info-box-v3">
-                        <label>BARRIO</label>
+                    <div class="input-group">
+                        <label>BARRIO *</label>
                         <input type="text" id="edit-barrio">
                     </div>
-
-                    <!-- Calle y Nro -->
-                    <div class="info-box-v3">
-                        <label>CALLE</label>
+                    <div class="input-group">
+                        <label>CALLE *</label>
                         <input type="text" id="edit-calle">
                     </div>
-                    <div class="info-box-v3">
-                        <label>NRO</label>
+                    <div class="input-group">
+                        <label>NRO. *</label>
                         <input type="text" id="edit-nro">
                     </div>
-
-                    <!-- Ocupación (Ancho completo) -->
-                    <div class="info-box-v3 full">
-                        <label>OCUPACIÓN / TRABAJO</label>
+                    <div class="input-group full-width">
+                        <label>OCUPACIÓN *</label>
                         <input type="text" id="edit-ocupacion">
                     </div>
-
-                    <!-- Seña y Monto (Como pediste, ancho completo) -->
-                    <div class="info-box-v3 full">
+                    <div class="input-group full-width">
                         <label>SEÑA / PRODUCTO</label>
                         <input type="text" id="edit-sena">
                     </div>
-                    <div class="info-box-v3 full">
+                    <div class="input-group full-width">
                         <label>MONTO APROXIMADO</label>
                         <input type="number" id="edit-monto">
                     </div>
-
-                </div>
-
-                <div class="modal-footer-detalle">
-                    <!-- ID MANTENIDO: btnCancelarEditar -->
-                    <button type="button" id="btnCancelarEditar" class="btn-confirmar-final" style="background-color: #64748b; border: none;" onclick="document.getElementById('modalEditar').classList.remove('active')">
-                        CANCELAR
-                    </button>
-                    <!-- ID MANTENIDO: btnGuardarEdicion -->
-                    <button type="submit" id="btnGuardarEdicion" class="btn-confirmar-final" style="flex-grow: 1;">
-                        GUARDAR CAMBIOS
-                    </button>
                 </div>
             </form>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer">
+            <div class="footer-row">
+                <button type="button" class="btn-cancelar" id="btnCancelarEditar">Cancelar</button>
+                <button type="submit" form="formEditarCliente" class="btn-guardar-solo" id="btnGuardarEdicion">Guardar Cambios</button>
+            </div>
         </div>
     </div>
 </div>
 
 
-    <!-- MODAL OTORGAR PRÉSTAMO -->
-    <div class="modal" id="modalOtorgar">
-        <div class="detalle-cliente-modal">
-            <div class="modal-handle"></div>
 
-            <div class="modal-header-prestamo">
-                <div class="header-top">
-                    <div class="header-title-area">
-                        <h2>Otorgar Préstamo</h2>
-                        <p>Completa los datos del nuevo préstamo</p>
-                    </div>
-                    <!-- Agregamos el onclick para cerrar -->
-                    <button class="btn-cerrar-modal" onclick="cerrarModalOtorgar()">
-                        <i class="fas fa-times"></i>
-                    </button>
+<!-- MODAL OTORGAR PRÉSTAMO -->
+<div class="modal" id="modalOtorgar">
+    <div class="detalle-cliente-modal oto-modal-card">
+        <div class="modal-handle"></div>
+
+        <!-- Cabecera corregida -->
+        <div class="modal-header-prestamo" style="position: relative;">
+            <div class="header-top">
+                <div class="header-title-area">
+                    <h2>Otorgar Préstamo</h2>
+                    <p class="oto-cliente-nombre" id="oto-nombre-sub" style="color: var(--color-primario); font-weight: 700; font-size: 0.95rem; margin: 2px 0 0 0;"></p>
                 </div>
-            </div>
-
-            <div class="modal-body-scroll">
-                <div class="info-grid-detalle">
-                    
-                    <div class="info-box-v3 full">
-                        <label>CLIENTE *</label>
-                        <input type="text" id="oto-nombre" readonly>
-                    </div>
-
-                    <div class="info-box-v3">
-                        <label>MONTO PRESTADO *</label>
-                        <input type="number" id="oto-monto" oninput="calcularPrestamo()">
-                    </div>
-
-                    <div class="info-box-v3">
-                        <label>INTERÉS (%) *</label>
-                        <div class="input-control-wrapper">
-                            <div class="btn-step" onclick="ajustar('oto-interes', -1)">-</div>
-                            <input type="number" id="oto-interes" value="50">
-                            <div class="btn-step" onclick="ajustar('oto-interes', 1)">+</div>
-                        </div>
-                    </div>
-
-                    <div class="info-box-v3 full">
-                        <label>CANTIDAD DE CUOTAS *</label>
-                        <div class="input-control-wrapper">
-                            <div class="btn-step" onclick="ajustar('oto-cuotas', -1)">-</div>
-                            <input type="number" id="oto-cuotas" value="3">
-                            <div class="btn-step" onclick="ajustar('oto-cuotas', 1)">+</div>
-                        </div>
-                    </div>
-
-                    <div class="info-box-v3">
-                        <label>CADA *</label>
-                        <div class="input-control-wrapper">
-                            <div class="btn-step" onclick="ajustar('oto-frec-valor', -1)">-</div>
-                            <input type="number" id="oto-frec-valor" value="1">
-                            <div class="btn-step" onclick="ajustar('oto-frec-valor', 1)">+</div>
-                        </div>
-                    </div>
-
-                    <div class="info-box-v3">
-                        <label>FRECUENCIA DE PAGO *</label>
-                        <select id="oto-frec-tipo" onchange="calcularPrestamo()">
-                            <option value="Semanal">Semanal</option>
-                            <option value="Diario">Diario</option>
-                            <option value="Mensual">Mensual</option>
-                        </select>
-                    </div>
-
-                    <div class="info-box-v3">
-                        <label>FECHA INICIO *</label>
-                        <input type="date" id="oto-fecha-inicio" onchange="calcularPrestamo()">
-                    </div>
-
-                    <div class="info-box-v3">
-                        <label>FECHA FIN *</label>
-                        <input type="text" id="oto-fecha-fin" readonly>
-                    </div>
-
-                    <div class="info-box-v3 full">
-                        <div class="box-calculos">
-                            <p class="calculos-title">CAMPOS CALCULADOS</p>
-                            <div class="calculos-grid">
-                                <div class="calc-item">
-                                    <label>TOTAL A DEVOLVER</label>
-                                    <span id="res-total">$ 0</span>
-                                </div>
-                                <div class="calc-item">
-                                    <label>VALOR POR CUOTA</label>
-                                    <span id="res-cuota">$ 0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer-prestamo">
-                <button class="btn-footer-secondary" onclick="cerrarModalOtorgar()">Cancelar</button>
-                <button class="btn-footer-primary btn-guardar-prestamo">Guardar Préstamo</button>
+                <!-- Botón X ahora posicionado relativo al modal -->
+                <button class="btn-cerrar-modal" onclick="cerrarModalOtorgar()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             </div>
         </div>
-    </div>
 
+        <div class="modal-body-scroll">
+            <div class="oto-grid">
+
+                <!-- MONTO -->
+                <div class="oto-field oto-full">
+                    <label class="oto-label">MONTO A PRESTAR *</label>
+                    <div class="oto-input-prefix">
+                        <span class="oto-prefix">$</span>
+                        <input type="text" id="oto-monto" placeholder="0" oninput="formatearMiles(this)">
+                    </div>
+                </div>
+
+                <!-- INTERÉS -->
+                <div class="oto-field oto-full">
+                    <label class="oto-label">INTERÉS %</label>
+                    <div class="oto-stepper">
+                        <div class="oto-step-btn" onclick="ajustar('oto-interes', -1)">−</div>
+                        <input class="oto-step-input" type="number" id="oto-interes" value="30" oninput="calcularPrestamo()">
+                        <div class="oto-step-btn" onclick="ajustar('oto-interes', 1)">+</div>
+                    </div>
+                </div>
+
+                <!-- CUOTAS -->
+                <div class="oto-field oto-full">
+                    <label class="oto-label">CANTIDAD DE CUOTAS</label>
+                    <div class="oto-stepper">
+                        <div class="oto-step-btn" onclick="ajustar('oto-cuotas', -1)">−</div>
+                        <input class="oto-step-input" type="number" id="oto-cuotas" value="3" oninput="calcularPrestamo()">
+                        <div class="oto-step-btn" onclick="ajustar('oto-cuotas', 1)">+</div>
+                    </div>
+                </div>
+
+                <!-- FRECUENCIA (botones) -->
+                <div class="oto-field oto-full">
+                    <label class="oto-label">FRECUENCIA DE PAGO</label>
+                    <div class="oto-frec-btns">
+                        <button class="oto-frec-btn oto-frec-active" data-value="Diario"   onclick="seleccionarFrecuencia(this)">Diario</button>
+                        <button class="oto-frec-btn"                  data-value="Semanal"  onclick="seleccionarFrecuencia(this)">Semanal</button>
+                        <button class="oto-frec-btn"                  data-value="Mensual"  onclick="seleccionarFrecuencia(this)">Mensual</button>
+                    </div>
+                    <!-- input oculto que guarda el valor para calcularPrestamo() -->
+                    <input type="hidden" id="oto-frec-tipo" value="Mensual">
+                    <!-- oto-frec-valor fijo en 1 para mantener compatibilidad con calcularPrestamo() -->
+                    <input type="hidden" id="oto-frec-valor" value="1">
+                </div>
+
+                <!-- FECHAS en fila -->
+                <div class="oto-fechas-row oto-full">
+                    <div class="oto-field">
+                        <label class="oto-label" style="text-align: center;">FECHA INICIO</label>
+                        <div class="oto-date-wrap">
+                            <span class="oto-date-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primario)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </span>
+                            <input class="oto-date-input" type="date" id="oto-fecha-inicio" onchange="calcularPrestamo()">
+                        </div>
+                    </div>
+                    <div class="oto-field">
+                        <label class="oto-label" style="text-align: center;">FECHA FIN</label>
+                        <div class="oto-date-wrap">
+                            <span class="oto-date-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primario)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </span>
+                            <input class="oto-date-input" type="date" id="oto-fecha-fin" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESUMEN CALCULADO -->
+                <div class="oto-field oto-full">
+                    <div class="oto-calculos-box">
+                        <p class="oto-calculos-title"> RESUMEN DEL PRÉSTAMO</p>
+                        <div class="oto-calculos-grid">
+                            <div class="oto-calc-item">
+                                <label class="oto-calc-label">A DEVOLVER</label>
+                                <span id="res-total">$ 0</span>
+                            </div>
+                            <div class="oto-calc-item">
+                                <label class="oto-calc-label">VALOR CUOTA</label>
+                                <span class="oto-cuota-highlight" id="res-cuota">$ 0</span>
+                            </div>
+                        </div>
+                        <p class="oto-resumen-sub" id="res-sub"></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="oto-footer">
+            <button class="oto-btn-cancel" onclick="cerrarModalOtorgar()">Cancelar</button>
+            <button class="oto-btn-primary btn-guardar-prestamo">Otorgar Préstamo</button>
+        </div>
+    </div>
+</div>
 
 
     <!-- Modal de Confirmación de Eliminación -->

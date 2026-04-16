@@ -216,7 +216,9 @@ html, body {
 }
 
 
-/* --- SECCIÓN BUSCADOR --- */
+/* --------------------- SECCIÓN BUSCADORRR ----------------- */
+/* --------------------- SECCIÓN BUSCADORRR ----------------- */
+
 .seccion-busqueda {
     margin: 20px 0;
 }
@@ -231,7 +233,7 @@ html, body {
     padding: 10px 18px 10px 50px; /* Espacio para el icono de lupa */
     background-color: var(--fondo-tarjeta); /* Color gris claro de la imagen */
     border: 1px solid var(--borde-suave);
-    border-radius: 15px;
+    border-radius: 10px;
     font-size: 14px;
     color: var(--texto-principal);
     outline: none;
@@ -279,10 +281,100 @@ html, body {
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(76, 70, 224, 0.3);
 }
-
-
-
 }
+
+
+
+
+
+
+
+.seccion-busqueda {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.filtro-dropdown-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.filtro-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 5px;
+    height: 45px;
+    border-radius: 10px;
+    border: 1px solid var(--borde-suave);
+    background-color: var(--fondo-tarjeta);
+    color: var(--texto-principal);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: 0.2s;
+}
+
+.filtro-dropdown-btn:hover {
+    border-color: var(--color-primario);
+}
+
+.filtro-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: var(--fondo-tarjeta);
+    border: 1px solid var(--borde-suave);
+    border-radius: 14px;
+    list-style: none;
+    padding: 6px;
+    margin: 0;
+    min-width: 180px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 100;
+}
+
+.filtro-menu.open {
+    display: block;
+}
+
+.filtro-opcion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px;
+    border-radius: 1px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--texto-principal);
+    transition: 0.15s;
+}
+
+.filtro-opcion:hover {
+    background-color: var(--otros-fondo);
+}
+
+.filtro-opcion.active {
+    background-color: var(--otros-fondo);
+    font-weight: 700;
+    color: var(--color-primario);
+}
+
+.dot-filtro {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+.dot-filtro.azul    { background-color: #3b82f6; }
+.dot-filtro.naranja { background-color: #f59e0b; }
+.dot-filtro.rojo    { background-color: #ef4444; }
+.dot-filtro.verde   { background-color: #22c55e; }
 
 
 /*---------------------------------------- CUADRITOS --------------------------------------------------*/
@@ -299,8 +391,8 @@ html, body {
 .resumen-grid .card-resumen {
     background-color: var(--fondo-tarjeta);
     border: 1px solid var(--borde-suave);
-    border-radius: 16px;
-    padding: 12px;
+    border-radius: 10px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -315,9 +407,9 @@ html, body {
 
 /* ÍCONOS (Círculos de color) */
 .icon-resumen {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -495,9 +587,21 @@ html, body {
 .status-finalizado .cliente-avatar { background-color: var(--exito-texto) !important; }
 .status-finalizado .barra-completada { background-color: var(--exito-texto) !important; }
 
-/* --- ESTADO: SIN PRÉSTAMO (AMARILLO) --- */
-.status-sin-prestamo { border-left-color: var(--alerta-texto) !important; }
-.status-sin-prestamo .cliente-avatar { background-color: var(--alerta-texto) !important; }
+/* --- ESTADO: SIN PRÉSTAMO (BLANCO) --- */
+.status-sin-prestamo { border-left: 6px solid #e6e6e6 !important; }
+.status-sin-prestamo .cliente-avatar { background-color: #e6e6e6!important; color: var(--fondo-tarjeta); }
+.status-sin-prestamo .barra-completada { background-color: #f59e0b !important; }
+.status-sin-prestamo .badge-estado { background: rgba(194, 194, 194, 0.349); color: #e6e6e6; border:1px solid #e6e6e63b;}
+
+
+/* --- ESTADO: VENCE MAÑANA (NARANJA) --- */
+.status-vence-mañana { border-left: 6px solid #f59e0b !important; }
+.status-vence-mañana .cliente-avatar { background-color: #f59e0b !important; color: var(--fondo-tarjeta); }
+.status-vence-mañana .barra-completada { background-color: #f59e0b !important; }
+.status-vence-mañana .badge-estado { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+
+/* Badge para vence mañana */
+.badge-vence-mañana { background: rgba(253, 107, 23, 0.822); color: #e6e6e6; border-color: #e6e6e6; }
 
 
 .cliente-card:hover {
@@ -686,9 +790,9 @@ html, body {
 
 /* --- BADGES DE ESTADO (Mapeados a tu paleta) --- */
 .badge-estado {
-    padding: 4px 5px !important;
-    border-radius: 10px!important;
-    font-size: 0.7rem!important;
+    padding: 4px 3px !important;
+    border-radius: 8px!important;
+    font-size: 0.65rem!important;
     font-weight: 800!important;
     text-transform: uppercase!important;
     letter-spacing: 0.05em;
@@ -699,10 +803,10 @@ html, body {
 }
 
 /* Colores de Badges */
-.badge-sin-prestamo { background: var(--alerta-fondo); color: var(--alerta-texto); border-color: var(--alerta-fondo); }
 .badge-atrasado     { background: var(--peligro-fondo); color: var(--peligro-texto); border-color: var(--peligro-fondo); }
-.badge-al-dia       { background: var(--exito-fondo); color: var(--exito-texto); border-color: var(--exito-fondo); }
+.badge-al-dia       { background: rgba(59, 130, 246, 0.15); color: #2275fa ; border-color: #2275fa4d ; }
 .badge-finalizado   { background: var(--exito-fondo); color: var(--exito-texto); border-color: var(--exito-fondo); }
+.badge-vence-mañana { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: #f59f0b38;}
 
 .chevron-detalle {
     margin-left: 5px;
@@ -736,24 +840,6 @@ html, body {
     color: var(--peligro-texto) !important;
 }
 
-/* --- REPASO DE LOS COLORES DE ESTADO (Para que todo combine) --- */
-
-/* AL DIA (Azul) */
-.status-al-dia { border-left: 6px solid #3b82f6 !important; }
-.status-al-dia .cliente-avatar { background-color: #3b82f6 !important; color: var(--fondo-tarjeta); }
-.status-al-dia .barra-completada { background-color: #3b82f6 !important; }
-
-/* ATRASADO (Rojo) */
-.status-atrasado { border-left: 6px solid var(--peligro-texto) !important; }
-.status-atrasado .cliente-avatar { background-color: var(--peligro-texto) !important; color: var(--fondo-tarjeta); }
-
-/* FINALIZADO (Verde) */
-.status-finalizado { border-left: 6px solid var(--exito-texto) !important; }
-.status-finalizado .cliente-avatar { background-color: var(--exito-texto) !important; color: var(--fondo-tarjeta); }
-
-/* SIN PRESTAMO (Amarillo) */
-.status-sin-prestamo { border-left: 6px solid var(--alerta-texto) !important; }
-.status-sin-prestamo .cliente-avatar { background-color: var(--alerta-texto) !important; color: var(--fondo-tarjeta); }
 
 /*--------------------------------- SIDEBAR -------------------------------------------*/
 
@@ -981,7 +1067,7 @@ html, body {
     border: none;
     width: 32px;
     height: 32px;
-    border-radius: 50%;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 20px;
 }
@@ -1060,6 +1146,39 @@ html, body {
     border-radius: 10px;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*------------------------- COBRAR CUOTA --------------------------------*/
 
 /* ESTILOS ESPECÍFICOS MODAL COBRO */
@@ -1077,8 +1196,8 @@ html, body {
 }
 
 .resumen-item span {
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--texto-secundario); /* Antes: #64748b */
     display: block;
     margin-bottom: 5px;
@@ -1106,34 +1225,48 @@ html, body {
 
 .control-pago label, .total-a-pagar-box label {
     display: block;
-    font-size: 14px;
+    font-size: 12px;
     color: var(--texto-secundario); /* Antes: #64748b */
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 5px;
 }
 
 .selector-cantidad {
     display: flex;
-    gap: 12px;
+    gap: px;
     margin-bottom: 25px;
+            border-radius: 10px;
+
 }
 
 .btn-step {
     width: 50px;
     height: 50px;
     background: var(--fondo-input); /* Antes: #e2e8f0 */
-    border: none;
-    border-radius: 12px;
     font-size: 20px;
     font-weight: 700;
     cursor: pointer;
-    color: var(--texto-principal);
+    color: var(--color-primario);
+    border: none;
+
+}
+
+#btnMas{
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+#btnMenos{
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+
+    
 }
 
 .valor-display {
     flex: 1;
     background: var(--fondo-input); /* Antes: #e2e8f0 */
-    border-radius: 12px;
+    border-radius: px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1146,8 +1279,7 @@ html, body {
     background: var(--otros-fondo); /* Antes: #f1f5f9 */
     padding: 10px;
     border-radius: 10px;
-    border: 2px solid var(--borde-suave); /* Ajustado para consistencia de tema */
-    margin-bottom: 20px;
+    border: 1px solid var(--borde-suave); /* Ajustado para consistencia de tema */
 }
 
 .monto-final {
@@ -1189,12 +1321,60 @@ html, body {
     margin-bottom: 8px;
     font-size: 14px;
     font-weight: 600;
+    color: var(--texto-principal);
 }
 
 #porcentajeCobro {
     font-weight: 800;
     color: #22c55e;
 }
+
+
+.modal-footerr-{
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 10px;
+width: 100%;
+padding: 0 25px;
+margin-bottom: 25px;}
+
+.modal-footerr- .btn-cancelar-finall{
+background-color: var(--otros-fondo);
+color: var(--texto-principal);
+width: 300px;
+border-radius: 10px;
+border: 1px solid var(--fondo-input);
+height: 45px;
+font-weight: 700;
+}
+
+.modal-footerr- .btn-confirmar-final{
+    background: var(--color-primario); /* Antes: #9494d6 */
+    color: #ffffff; /* FIJO: Siempre blanco para contraste */
+    border-radius: 10px;
+    border-radius: 10px;
+    height: 45px;
+    margin: 0;
+    padding: 0;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*------------------------ MODAL DE VER DETALLES -----------------------------------*/
 
@@ -1284,7 +1464,7 @@ padding: 0;}
     border: none;
     width: 34px;
     height: 34px;
-    border-radius: 50%;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 1.2rem;
     color: var(--otros-texto);
@@ -1524,7 +1704,7 @@ background-color: var(--fondo-tarjeta) !important;}
     z-index: 2000;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 10px;
 }
 
 .modal.active { display: flex; }
@@ -1576,7 +1756,7 @@ background-color: var(--fondo-tarjeta) !important;}
     border: none;
     width: 32px;
     height: 32px;
-    border-radius: 50%;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1660,225 +1840,397 @@ background-color: var(--fondo-tarjeta) !important;}
 .modal-body-scroll::-webkit-scrollbar-thumb { background: var(--borde-suave); border-radius: 10px; }
 
 
+
+
+
+
+
 /*-------------------- MODAL OTORGAR PRESTAMO -----------------------------*/
+/* ==========================================
+   MODAL OTORGAR PRÉSTAMO — AISLADO
+   ========================================== */
 
-/* El modal empieza oculto */
-.modal {
-    display: none; /* Oculto por defecto */
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4); /* FIJO: Sombra de fondo */
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
+
+.oto-modal-card {
+    background: var(--fondo-tarjeta) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important;
+    width: 95% !important;
+    max-width: 550px !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-/* Solo se ve cuando tiene la clase .active */
-.modal.active {
-    display: flex;
-}
-
-.detalle-cliente-modal {
-    background: var(--fondo-app); /* Antes: #eef2f5 */
-    width: 90%;
-    max-width: 440px;
-    border-radius: 32px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+.oto-grid {
     display: flex;
     flex-direction: column;
-    max-height: 90vh;
+    gap: 12px;
+    padding: 16px 0 8px;
 }
 
-.modal-handle {
-    width: 40px;
-    height: 4px;
-    background: var(--borde-suave); /* Antes: #cbd5e1 */
-    border-radius: 10px;
-    margin: 12px auto 6px;
-}
+.oto-field { display: flex; flex-direction: column; }
 
-
-.header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.header-title-area h2 {
-    margin: 0;
-    font-size: 1.3rem;
-    color: var(--texto-principal); /* Antes: #1f2937 */
+.oto-label {
+    font-size: 0.62rem;
     font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--texto-secundario);
+    margin-bottom: 5px;
 }
 
-.header-title-area p {
-    margin: 2px 0 0;
-    font-size: 0.85rem;
-    color: var(--texto-secundario); /* Antes: #64748b */
+/* INPUT CON PREFIJO $ */
+.oto-input-prefix {
+    display: flex;
+    align-items: center;
+    background: var(--fondo-input);
+    border: 1.5px solid var(--borde-suave);
+    border-radius: 14px;
+    padding: 0 14px;
+    height: 48px;
+    gap: 6px;
+    transition: border-color 0.2s;
+}
+.oto-input-prefix:focus-within { border-color: var(--color-primario); }
+
+.oto-prefix {
+    color: var(--texto-secundario);
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
 }
 
-.btn-cerrar-modal {
-    background: var(--fondo-input); /* Antes: #e2e8f0 */
+.oto-input-prefix input {
+    flex: 1;
     border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
+    outline: none;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--texto-principal);
+    width: 100%;
+    -moz-appearance: textfield;
+}
+.oto-input-prefix input::-webkit-outer-spin-button,
+.oto-input-prefix input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* STEPPER */
+.oto-stepper {
+    display: flex;
+    align-items: center;
+    background: var(--fondo-input);
+    border: 1.5px solid var(--borde-suave);
+    border-radius: 14px;
+    overflow: hidden;
+    height: 48px;
+}
+
+.oto-step-btn {
+    width: 52px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
     cursor: pointer;
-    color: var(--texto-secundario); /* Antes: #475569 */
+    color: var(--color-primario);
+    background: transparent;
+    user-select: none;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+.oto-step-btn:hover { background: rgba(99,102,241,0.12); }
+
+.oto-step-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    text-align: center;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--texto-principal);
+    -moz-appearance: textfield;
+}
+.oto-step-input::-webkit-outer-spin-button,
+.oto-step-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* BOTONES FRECUENCIA */
+.oto-frec-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
 }
 
-.modal-body-scroll {
-    padding: 0 24px 20px;
-    overflow-y: auto;
+.oto-frec-btn {
+    padding: 11px 0;
+    border-radius: 14px;
+    border: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--fondo-input);
+    color: var(--texto-secundario);
+    border: 1.5px solid var(--borde-suave);
+    transition: all 0.2s;
 }
 
-.info-grid-detalle {
+.oto-frec-btn.oto-frec-active {
+    background: var(--color-primario);
+    color: #fff;
+    border-color: var(--color-primario);
+}
+
+/* FECHAS */
+.oto-grid .oto-field:has(.oto-date-wrap),
+.oto-grid .oto-field:has(.oto-date-wrap) + .oto-field:has(.oto-date-wrap) {
+    /* se manejan con el wrapper de abajo */
+}
+
+/* Contenedor de los dos campos de fecha en fila */
+.oto-grid {
+    /* redefine solo el área de fechas con sub-grid */
+}
+
+/* Hack limpio: ponemos las fechas en fila usando una clase extra en el grid */
+.oto-fechas-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+
+.oto-date-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--fondo-input);
+    border: 1.5px solid var(--borde-suave);
+    border-radius: 14px;
+    height: 48px;
+    transition: border-color 0.2s;
+}
+.oto-date-wrap:focus-within { border-color: var(--color-primario); }
+
+.oto-date-icon { font-size: 0.9rem; flex-shrink: 0;}
+
+.oto-date-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--texto-principal);
+    colorscheme: dark;
+    width: 100%;
+}
+
+/* RESUMEN */
+.oto-calculos-box {
+    background: var(--fondo-input);
+    border: 1.5px solid var(--color-primario);
+    border-radius: 18px;
+    padding: 14px 16px;
+}
+
+.oto-calculos-title {
+    color: var(--color-primario);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin: 0 0 12px 0;
+}
+
+.oto-calculos-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+    margin-bottom: 10px;
 }
 
-.full { grid-column: span 2; }
+.oto-calc-item {
+    background: var(--fondo-tarjeta);
+    border-radius: 12px;
+    padding: 10px 12px;
+}
 
-.info-box-v3 label {
+.oto-calc-label {
     display: block;
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: var(--texto-secundario); /* Antes: #64748b */
-    margin-bottom: 0px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--texto-secundario);
+    margin-bottom: 4px;
 }
 
-/* Estilo exacto de inputs de la imagen */
-.info-box-v3 input, .info-box-v3 select {
-    width: 100%;
-    background: var(--fondo-input); /* Antes: #e2e8f0 */
-    border: 1px solid var(--borde-suave); /* Antes: #d1d5db */
-    padding: 1px;
-    border-radius: 14px;
-    font-size: 0.85rem;
-    color: var(--texto-principal); /* Antes: #1f2937 */
-    font-weight: 600;
-}
-
-.input-control-wrapper {
-    display: flex;
-    background: var(--fondo-input); /* Antes: #e2e8f0 */
-    border-radius: 14px;
-    border: 1px solid var(--borde-suave); /* Antes: #d1d5db */
-    overflow: hidden;
-}
-
-.input-control-wrapper input {
-    border: none;
-    text-align: center;
-    background: transparent;
-}
-
-.btn-step {
-    width: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: pointer;
-    color: var(--texto-secundario); /* Antes: #475569 */
-    background: var(--borde-suave); /* Antes: #d1d5db */
-    user-select: none;
-}
-
-.box-calculos {
-    background: var(--otros-fondo); /* Antes: #e0e2f0 */
-    border: 1px solid var(--borde-suave); /* Antes: #ced1e6 */
-    border-radius: 20px;
-    padding: 16px;
-}
-
-.calculos-title {
-    color: var(--color-primario); /* Antes: #4c46e0 */
-    font-size: 0.7rem;
-    font-weight: 800;
-    margin: 0 0 10px 0;
-}
-
-.calculos-grid {
-    display: flex;
-    justify-content: space-between;
-}
-
-.calc-item span {
+.oto-calc-item span {
     display: block;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 900;
-    color: var(--texto-principal); /* Antes: #1f2937 */
+    color: var(--texto-principal);
 }
 
-
-.btn-footer-primary {
-    background: var(--color-primario);
-    color: #ffffff; /* FIJO: Blanco sobre fondo primario */
-    border: none;
-    padding: 14px;
-    border-radius: 16px;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
+.oto-cuota-highlight {
+    color: var(--color-primario) !important;
 }
 
-.btn-footer-secondary {
-    background: transparent;
-    border: 1px solid var(--borde-suave); /* Antes: #d1d5db */
-    padding: 14px;
-    border-radius: 16px;
-    font-weight: 700;
-    color: var(--texto-principal); /* Antes: #1f2937 */
-    cursor: pointer;
-}
-
-/* Contenedor del modal (el fondo oscuro) */
-.modal-v2 {
-    display: none; /* Oculto por defecto */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro transparente */
-    z-index: 2000; /* Asegura que esté arriba de todo */
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(4px); /* Efecto de desenfoque opcional */
-}
-
-/* Cuando el modal tiene la clase 'active', se muestra */
-.modal-v2.active {
-    display: flex;
-}
-
-/* La tarjeta blanca dentro del modal */
-.modal-contenido-v2 {
-    background: white;
-    padding: 24px;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 400px;
+.oto-resumen-sub {
+    font-size: 0.72rem;
+    color: var(--texto-secundario);
     text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    margin: 0;
 }
 
-.modal-acciones {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
+/* FOOTER */
+.oto-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px 24px 24px;
+    border-top: 1px solid var(--borde-suave);
+    flex-shrink: 0;
 }
 
-.btn-confirmar-eliminar {
-    background-color: #ef4444;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
-    flex: 1;
+.oto-btn-cancel {
+    background: transparent;
+    border: 1.5px solid var(--borde-suave);
+    padding: 13px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--texto-principal);
     cursor: pointer;
+    transition: opacity 0.2s;
+}
+.oto-btn-cancel:hover { opacity: 0.7; }
+
+.oto-btn-primary {
+    background: var(--color-primario);
+    color: #fff;
+    border: none;
+    padding: 13px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.oto-btn-primary:hover { opacity: 0.85; }
+
+/* Header del modal */
+#modalOtorgar .modal-header-prestamo {
+    padding: 12px 24px 12px;
+    border-bottom: 1px solid var(--borde-suave);
+    flex-shrink: 0;
 }
 
+#modalOtorgar .header-title-area h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--texto-principal);
+    margin: 0;
+}
+
+#modalOtorgar .btn-cerrar-modal {
+    background: var(--fondo-input);
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--texto-secundario);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Body con padding */
+#modalOtorgar .modal-body-scroll {
+    padding: 0 20px 12px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Footer — botón que no se corte */
+.oto-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px 20px 24px;
+    border-top: 1px solid var(--borde-suave);
+    flex-shrink: 0;
+}
+
+.oto-btn-primary {
+    background: var(--color-primario);
+    color: #fff;
+    border: none;
+    padding: 13px 10px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    line-height: 1.3;
+    text-align: center;
+}
+
+.oto-btn-cancel {
+    background: transparent;
+    border: 1.5px solid var(--borde-suave);
+    padding: 13px 10px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--texto-principal);
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+/* Quitar campo oto-nombre (input oculto — ya no se muestra) */
+#oto-nombre { display: none; }
+#modalOtorgar .oto-field:has(#oto-nombre) { display: none; }
+
+/* Eliminar el icono de calendario por defecto del navegador */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+/* Centrar la X dentro del modal */
+#modalOtorgar .oto-modal-card {
+    position: relative; /* Importante para que la X se mueva con el modal */
+}
+
+#modalOtorgar .btn-cerrar-modal {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--fondo-input);
+    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    transition: all 0.2s;
+}
+
+/* Centrar las fechas y labels */
+.oto-fechas-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 5px;
+}
+
+.oto-date-wrap {
+    justify-content: center; /* Centra el contenido horizontalmente */
+    padding: 0 10px;
+}
+
+.oto-date-input {
+    text-align: center; /* Centra el texto de la fecha */
+    padding-right: 20px; /* Compensa el espacio del icono de la izquierda para que se vea centrado */
+}
+
+.oto-date-icon {
+    margin-right: -15px; /* Acerca el SVG al texto centrado */
+    z-index: 1;
+}
