@@ -10,6 +10,7 @@ html, body {
     overflow-x: hidden; /* Prohíbe el scroll horizontal en toda la web */
     width: 100%;
     position: relative;
+    height: 100%;
 }
 
 
@@ -95,6 +96,7 @@ html, body {
         display: flex;
     width: 100%;
     overflow-x: hidden; /* Evita que el flex se desborde */
+    height: 100%;
 }
 
 
@@ -104,6 +106,7 @@ html, body {
     padding: 0 60px; /* Dale aire a los costados */
     max-width: calc(100vw - 260px); /* Evita que se desborde */
     background-color: var(--fondo-app);
+    height: 100vh;
 }
 
 /*---------------------------- TOP BAR (Optimizado) -------------------------------------*/
@@ -165,9 +168,9 @@ html, body {
 
 /* Botón Tema */
 .btn-circular-tema {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
     background: var(--fondo-tarjeta);
     border: 1px solid var(--borde-suave);
     color: var(--texto-principal);
@@ -183,15 +186,15 @@ html, body {
     background-color: var(--color-primario);
     color: white;
     border: none;
-    height: 42px;
-    padding: 0 5px;
-    border-radius: 12px;
+    height: 35px;
+    border-radius: 8px;
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 12px;
 }
 
 /* --- AJUSTES MOBILE --- */
@@ -271,7 +274,7 @@ html, body {
     color: white;
     border: none;
     padding: 10px 22px;
-    border-radius: 12px;
+    border-radius: 10px;
     font-weight: 600;
     font-size: 15px;
     display: flex;
@@ -375,6 +378,8 @@ html, body {
 .dot-filtro.naranja { background-color: #f59e0b; }
 .dot-filtro.rojo    { background-color: #ef4444; }
 .dot-filtro.verde   { background-color: #22c55e; }
+.dot-filtro.blanco { background-color: #ffffff; border: 1px solid var(--borde-suave); }
+
 
 
 /*---------------------------------------- CUADRITOS --------------------------------------------------*/
@@ -562,7 +567,7 @@ html, body {
 .cliente-card {
     background-color: var(--fondo-tarjeta);
     border: 1px solid var(--borde-suave);
-    border-radius: 18px;
+    border-radius: 14px;
     display: flex;
     flex-direction: column;
     transition: all 0.3s ease;
@@ -588,7 +593,7 @@ html, body {
 .status-finalizado .barra-completada { background-color: var(--exito-texto) !important; }
 
 /* --- ESTADO: SIN PRÉSTAMO (BLANCO) --- */
-.status-sin-prestamo { border-left: 6px solid #cecece !important; }
+.status-sin-prestamo { border-left: 6px solid #cecece    !important; }
 .status-sin-prestamo .cliente-avatar { background-color: #cecece!important; color: var(--fondo-tarjeta); }
 .status-sin-prestamo .barra-completada { background-color: #f59e0b !important; }
 .status-sin-prestamo .badge-estado { background: rgba(167, 166, 166, 0.5); color: #ffffff; border:1px solid #e6e6e63b;}
@@ -611,7 +616,7 @@ html, body {
 
 /* HEADER DE LA TARJETA (Lo que siempre se ve) */
 .cliente-header {
-    padding: 14px 22px;
+    padding: 10px 8px;
     display: flex;
     align-items: center;
     gap: 15px;
@@ -619,15 +624,15 @@ html, body {
 }
 
 .cliente-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #313131; /* FIJO: Siempre blanco para contraste */
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
     flex-shrink: 0;
 }
 
@@ -637,14 +642,14 @@ html, body {
 
 .cliente-info h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--texto-principal);
 }
 
 .cliente-info p {
     margin: 0;
-    font-size: 13px;
+    font-size: 11.5px;
     color: var(--texto-secundario);
 }
 
@@ -670,7 +675,7 @@ html, body {
 
 .cliente-card.expanded .cliente-detalles {
     max-height: 500px; 
-    padding: 20px 18px;
+    padding: 10px 18px;
     border-top: 1px solid var(--borde-suave);
 }
 
@@ -690,7 +695,7 @@ html, body {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--texto-principal);
 }
 
@@ -742,7 +747,7 @@ html, body {
 
 .btn-secundario-v2 {
     padding: 12px;
-    border-radius: 12px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -790,9 +795,9 @@ html, body {
 
 /* --- BADGES DE ESTADO (Mapeados a tu paleta) --- */
 .badge-estado {
-    padding: 4px 3px !important;
-    border-radius: 8px!important;
-    font-size: 0.65rem!important;
+    padding: 3px 2px !important;
+    border-radius: 6px!important;
+    font-size: 0.55rem!important;
     font-weight: 800!important;
     text-transform: uppercase!important;
     letter-spacing: 0.05em;
@@ -809,7 +814,6 @@ html, body {
 .badge-vence-mañana { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: #f59f0b38;}
 
 .chevron-detalle {
-    margin-left: 5px;
     transition: 0.3s;
     color: var(--texto-secundario);
 }
@@ -1041,10 +1045,12 @@ html, body {
 }
 
 .modal-header {
-    padding: 30px 30px 20px 20px;
+    padding: 25px 30px 20px 20px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    border-bottom: 1px solid var(--borde-suave);
+    margin-bottom: 10px;
 }
 
 .modal-titulo h2 { 
@@ -1056,9 +1062,10 @@ html, body {
 
 .modal-titulo p { 
     margin: 5px 0 0; 
-    color: var(--texto-secundario); /* Antes: #64748b */
+    color: var(--color-primario); /* Antes: #64748b */
     font-size: 11.5px;
-    letter-spacing:0cap; 
+    letter-spacing:0cap;
+    font-weight: 600; 
 }
 
 .btn-cerrar-modal {
@@ -1423,7 +1430,7 @@ padding: 0;}
 }
 
 .header-main {
-    padding: 15px 0px;
+    padding: 10px 0px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -1655,8 +1662,8 @@ padding: 0;}
 
 .cuota-item {
     background: var(--fondo-input);
-    padding: 12px 20px;
-    border-radius: 14px;
+    padding: 8px 20px;
+    border-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1673,7 +1680,7 @@ padding: 0;}
 
 .cuota-info p { margin: 0; }
 .cuota-numero { font-weight: 700; color: var(--texto-principal); font-size: 14px; }
-.cuota-fecha { font-size: 12px; color: var(--texto-secundario); }
+.cuota-fecha { font-size: 10px; color: var(--texto-secundario); }
 
 .cuota-monto-status { display: flex; align-items: center; gap: 15px; }
 .cuota-monto { font-weight: 800; color: var(--texto-principal); }
@@ -1767,7 +1774,7 @@ background-color: var(--fondo-tarjeta) !important;}
 
 /* 5. Cuerpo con Scroll */
 .modal-body-scroll {
-    padding: 10px 20px 25px;
+    padding: 0px 20px 25px;
     overflow-y: auto;
     flex-grow: 1;
 }
@@ -2233,4 +2240,519 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .oto-date-icon {
     margin-right: -15px; /* Acerca el SVG al texto centrado */
     z-index: 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*-------------------------RESPONSIVEE? ------------------------*/
+
+/* ==========================================
+   RESPONSIVE MÓVIL — INFINIX HOT 40 PRO
+   Pantalla: ~393px ancho CSS
+   ========================================== */
+
+@media (max-width: 768px) {
+
+    html, body { height: 100%; }
+
+    .app {
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Sidebar oculto por defecto */
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    .sidebar.open { left: 0; }
+
+    /* Contenido principal */
+    .main-content {
+        width: 100%;
+        max-width: 100vw;
+        padding: 0 14px;
+        height: 100vh;
+        overflow-y: auto;
+    }
+
+    /* Topbar */
+    .topbar { padding: 14px 0; }
+    .titulo-seccion h1 { font-size: 20px; }
+    .btn-principal-v2 { padding: 8px 4px; font-size: 12px; }
+
+    /* Buscador + filtro en fila */
+    .seccion-busqueda { flex-direction: row; gap: 8px; }
+    .buscador-container-v2 input {
+        font-size: 13px;
+        padding: 10px 14px 10px 42px;
+    }
+
+    /* Lista de clientes */
+    .lista-clientes { gap: 10px; }
+    .cliente-header { padding: 10px 12px; gap: 10px; }
+    .cliente-info h3 { font-size: 13px; }
+    .cliente-info p  { font-size: 12px; }
+    .cliente-avatar { width: 36px; height: 36px; font-size: 12px; }
+    .badge-estado { font-size: 0.5rem !important; padding: 3px 5px !important; }
+
+    /* Botones de acción dentro de tarjeta */
+    .acciones-card {  gap: 8px; }
+    .btn-ver-detalles,
+    .btn-cobrar,
+    .btn-otorgar,
+    .btn-eliminar {
+        width: 100%;
+        height: 40px;
+        font-size: 11px;
+    }
+
+    .info-grid { grid-template-columns: 1fr; gap: 5px; }
+
+    /* Paginación */
+    .paginacion-footer { padding: 12px 0; gap: 12px; }
+
+
+    /* =============================================
+       MODALES — ESTRUCTURA 2 COLUMNAS EN MÓVIL
+       (igual a las imágenes de referencia)
+       ============================================= */
+
+    .modal-overlay {
+        align-items: flex-end; /* El modal sube desde abajo en móvil */
+        padding: 0;
+    }
+
+    .modal-container {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 24px 24px 0 0; /* Bordes solo arriba */
+        max-height: 95vh;
+        padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    .modal-header {
+        padding: 22px 20px 14px;
+    }
+
+    .modal-titulo h2 {
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .modal-titulo p {
+        font-size: 12px;
+        margin-top: 3px;
+    }
+
+    .modal-body {
+        padding: 0 16px 16px;
+        overflow-y: auto;
+    }
+
+    /* -----------------------------------------------
+       INPUT GRID: 2 COLUMNAS en móvil (como la imagen)
+       ----------------------------------------------- */
+    .input-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* ← CLAVE: 2 columnas */
+        gap: 10px;
+    }
+
+    /* Ocupación, Seña, Monto → ancho completo */
+    .input-group.full-width {
+        grid-column: span 2;
+    }
+
+    .input-group label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--otros-texto);
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 12px 12px;
+        background: var(--fondo-input);
+        color: var(--texto-principal);
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .input-group input::placeholder {
+        color: var(--texto-secundario);
+        font-size: 13px;
+    }
+
+    /* Footer del modal */
+    .modal-footer {
+        padding: 8px 16px 20px;
+        border-top: 1px solid var(--borde-suave);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .footer-row {
+        display: flex;
+        gap: 10px;
+        flex-direction: row; /* ← Cancelar y Guardar JUNTOS en fila */
+    }
+
+    .btn-cancelar {
+        flex: 1;
+        height: 40px;
+        font-size: 12px;
+        border-radius: 10px;
+    }
+
+    .btn-guardar-solo {
+        flex: 1;
+        height: 40px;
+        font-size: 12px;
+        border-radius: 10px;
+    }
+
+    .btn-guardar-prestamo {
+        width: 100%;
+        height: 40px;
+        font-size: 12px;
+        border-radius: 14px;
+    }
+
+
+    /* =============================================
+       MODAL COBRAR CUOTA
+       ============================================= */
+
+    #modalCobrarCuota .modal-container {
+        border-radius: 24px 24px 0 0;
+    }
+
+    /* Las 4 tarjetitas de resumen: 2x2 */
+    .resumen-cobro-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .resumen-item {
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    .resumen-item span {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .resumen-item p {
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+    /* Barra de progreso */
+    .progreso-header-cobro {
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        margin-top: 20px;
+    }
+
+    /* Selector de cuotas */
+    .control-pago label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .selector-cantidad {
+        display: flex;
+        margin-bottom: 14px;
+        border-radius: 14px;
+        overflow: hidden;
+        height: 54px;
+    }
+
+    .btn-step {
+        width: 60px;
+        height: 40px;
+        font-size: 22px;
+        background: var(--fondo-input);
+        color: var(--color-primario);
+        border: none;
+        cursor: pointer;
+    }
+
+    #btnMenos { border-radius: 14px 0 0 14px; }
+    #btnMas   { border-radius: 0 14px 14px 0; }
+
+    .valor-display {
+        flex: 1;
+        font-size: 22px;
+        font-weight: 800;
+        background: var(--fondo-input);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--texto-principal);
+        height: 40px;
+    }
+
+    /* Caja Total a Pagar */
+    .total-a-pagar-box {
+        padding: 8px;
+        border-radius: 10px;
+        border: 1px solid var(--color-primario);
+
+    }
+
+    #titulo-totalapagar {
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        color: var(--color-primario);
+    }
+
+    .monto-final {
+        font-size: 36px;
+        font-weight: 900;
+        text-align: center;
+        color: var(--color-primario);
+    }
+
+    /* Footer cobro: 2 botones en fila */
+    .modal-footerr- {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        padding: 15px 16px 20px;
+        margin-bottom: 0;
+        border-top: 1px solid var(--borde-suave);
+    }
+
+    .modal-footerr- .btn-cancelar-finall {
+        flex: 1;
+        height: 40px;
+        font-size: 14px;
+        font-weight: 700;
+        border-radius: 12px;
+        width: auto;
+    }
+
+    .modal-footerr- .btn-confirmar-final {
+        flex: 1;
+        height: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 12px;
+        padding: 0;
+        margin: 0;
+    }
+
+
+
+
+    /* =============================================
+       MODAL DETALLE CLIENTE
+       ============================================= */
+
+    .detalle-cliente-modal {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 24px 24px 0 0 !important;
+        max-height: 95vh;
+    }
+
+    .modal-header-detalle { padding: 6px 18px ; }
+
+    .header-title-area h2 { font-size: 1.3rem; }
+
+    .input-grid.det-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .modal-footer-detalle {
+        flex-direction: row;
+        gap: 10px;
+        padding: 14px 16px 20px;
+    }
+
+    .btn-guardar-solo{
+    display: flex;
+    align-items: center;
+    justify-content: center;}
+
+    .btn-cancelar{
+    display: flex;
+    align-items: center;
+    justify-content: center;}
+
+
+    .modal-footer-detalle .btn-cancelar,
+    .modal-footer-detalle .btn-editar-cliente {
+        flex: 1;
+        height: 40px;
+        font-size: 13px;
+        border-radius: 12px;
+
+    }
+
+
+
+
+    /* =============================================
+       MODAL ELIMINAR
+       ============================================= */
+
+    #modalEliminar .modal-container {
+        border-radius: 24px 24px 0 0;
+        padding: 30px 20px 28px;
+    }
+
+    .modal-acciones-v2 {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .modal-acciones-v2 .btn-secundario-v2,
+    .modal-acciones-v2 .btn-principal-v2 {
+        flex: 1;
+        height: 50px;
+        font-size: 15px;
+        border-radius: 14px;
+    }
+}
+
+
+/* =============================================
+   AJUSTE FINO — PANTALLAS MUY PEQUEÑAS (<360px)
+   ============================================= */
+@media (max-width: 360px) {
+    .input-grid { gap: 8px; }
+    .input-group input { padding: 10px; font-size: 13px; }
+    .oto-step-btn { width: 48px; }
+    .resumen-item p { font-size: 15px; }
+    .monto-final { font-size: 28px; }
+}
+
+
+/* =============================================
+   MODALES — CENTRADOS, MISMO TAMAÑO, TODOS
+   Aplica a: modal-overlay, .modal (detalle/otorgar)
+   ============================================= */
+
+/* --- OVERLAY FIJO Y OSCURO --- */
+.modal-overlay,
+.modal {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(4px) !important;
+    display: none;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 2000 !important;
+    padding: 20px !important; /* Espacio en todos los costados */
+}
+
+.modal-overlay.active,
+.modal.active {
+    display: flex !important;
+}
+
+/* --- CONTENEDOR DEL MODAL (mismo tamaño para todos) --- */
+.modal-container,
+.detalle-cliente-modal,
+.oto-modal-card {
+    width: 100% !important;
+    max-width: 460px !important;
+    max-height: 88vh !important;
+    border-radius: 22px !important;
+    overflow: hidden;
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--fondo-tarjeta) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35) !important;
+    /* Quita el borde-redondeado solo arriba que teníamos en móvil */
+    border-radius: 22px !important;
+}
+
+/* --- MÓVIL: centrado con margen lateral --- */
+@media (max-width: 768px) {
+
+    .modal-overlay,
+    .modal {
+        padding: 16px !important; /* Espacio a los 4 costados en móvil */
+        align-items: center !important; /* Centrado vertical */
+    }
+
+    .modal-container,
+    .detalle-cliente-modal,
+    .oto-modal-card {
+        width: 100% !important;
+        max-width: 100% !important;    /* Ocupa el ancho menos el padding del overlay */
+        max-height: 90vh !important;
+        border-radius: 22px !important; /* Bordes redondeados en todos los lados */
+    }
+
+    /* Quitar el "sube desde abajo" que teníamos antes */
+    .modal-overlay { align-items: center !important; }
+    .modal         { align-items: center !important; }
+}
+
+
+
+
+
+
+
+
+
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--texto-principal);
+}
+
+.info-item svg {
+    color: var(--texto-principal);
+    flex-shrink: 0;
+}
+
+.info-item strong {
+    color: var(--texto-secundario);
+    font-weight: 600;
 }

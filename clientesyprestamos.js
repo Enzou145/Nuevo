@@ -203,60 +203,112 @@ function renderizarClientes(datos) {
         const esFinalizado = estadoRaw === 'finalizado';
 
         const accionesHTML = `
-            <div class="acciones-card">
-                <button class="btn-secundario-v2 btn-ver-detalles">Ver detalles</button>
-                ${esNuevo ? 
-                    `<button class="btn-principal-v2 btn-otorgar">Otorgar préstamo</button>` :
-                esFinalizado ? 
-                    `<button class="btn-principal-v2 btn-eliminar" style="background-color: #ef4444; color: white;">🗑️ Eliminar</button>` :
-                    `<button class="btn-principal-v2 btn-cobrar">＄ Cobrar cuota</button>`
-                }
-            </div>
-        `;
+    <div class="acciones-card">
+        <button class="btn-secundario-v2 btn-ver-detalles">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Ver detalles
+        </button>
+        ${esNuevo ? 
+            `<button class="btn-principal-v2 btn-otorgar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Otorgar préstamo
+            </button>` :
+        esFinalizado ? 
+            `<button class="btn-principal-v2 btn-eliminar" style="background-color: #ef4444; color: white;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path><path d="M14 11v6"></path>
+                </svg>
+                Eliminar
+            </button>` :
+            `<button class="btn-principal-v2 btn-cobrar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                Cobrar cuota
+            </button>`
+        }
+    </div>
+`;
 
-        card.innerHTML = `
-            <div class="cliente-header">
-                <div class="cliente-avatar">${iniciales}</div>
-                <div class="cliente-info">
-                    <h3>${nombreCompleto}</h3>
-                    <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString()}</span></p>
-                </div>
-                
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="badge-estado badge-${estadoLimpio}">
-                        ${estadoRaw.toUpperCase()}
-                    </div>
-                    <div class="chevron-detalle">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                            <polyline points="6 9 12 15 18 9"></polyline>
+card.innerHTML = `
+    <div class="cliente-header">
+        <div class="cliente-avatar">${iniciales}</div>
+        <div class="cliente-info">
+            <h3>${nombreCompleto}</h3>
+            <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString()}</span></p>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="badge-estado badge-${estadoLimpio}">
+                ${estadoRaw.toUpperCase()}
+            </div>
+            <div class="chevron-detalle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="cliente-detalles">
+        <div class="info-grid">
+            <div class="info-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+                <strong>DNI:</strong> ${cliente.dni || '-'}
+            </div>
+            <div class="info-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <strong>Tel:</strong> ${cliente.telefono || '-'}
+            </div>
+            <div class="info-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <strong>Loc:</strong> ${direccionCompleta}
+            </div>
+            <div class="info-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+                <strong>Job:</strong> ${cliente.ocupacion || '-'}
+            </div>
+        </div>
+        
+        ${!esNuevo ? `
+            <div class="cuotas-progreso">
+                <div class="progreso-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
                         </svg>
-                    </div>
+                        $ ${(prestamo?.total_devolver || 0).toLocaleString()} · ${cuotasPagadas}/${cuotasTotales} cuotas
+                    </span>
+                </div>
+                <div class="barra-fondo">
+                    <div class="barra-completada" style="width: ${porcentaje}%"></div>
                 </div>
             </div>
-
-            <div class="cliente-detalles">
-                <div class="info-grid">
-                    <div class="info-item"><strong>DNI:</strong> ${cliente.dni || '-'}</div>
-                    <div class="info-item"><strong>Tel:</strong> ${cliente.telefono || '-'}</div>
-                    <div class="info-item"><strong>Loc:</strong> ${direccionCompleta}</div>
-                    <div class="info-item"><strong>Job:</strong> ${cliente.ocupacion || '-'}</div>
-                </div>
-                
-                ${!esNuevo ? `
-                    <div class="cuotas-progreso">
-                        <div class="progreso-header" style="display:flex; justify-content:space-between; align-items:center;">
-                            <span>$ ${(prestamo?.total_devolver || 0).toLocaleString()}</span>
-                            <span> ${cuotasPagadas} DE ${cuotasTotales} cuotas    <strong>${porcentaje}%</strong></span>
-                        </div>
-                        <div class="barra-fondo">
-                            <div class="barra-completada" style="width: ${porcentaje}%"></div>
-                        </div>
-                    </div>
-                ` : ''}
-                ${accionesHTML} 
-            </div>
-        `; 
-
+        ` : ''}
+        ${accionesHTML} 
+    </div>
+`;
         card.onclick = (e) => { if(!e.target.closest('button')) card.classList.toggle('expanded'); };
         card.querySelector('.btn-ver-detalles').onclick = (e) => { e.stopPropagation(); abrirModalDetalles(cliente); };
 
