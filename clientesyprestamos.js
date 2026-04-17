@@ -268,7 +268,7 @@ document.getElementById('textoTotal').innerText = `${total} CLIENTES`;
         <div class="cliente-avatar">${iniciales}</div>
         <div class="cliente-info">
             <h3>${nombreCompleto}</h3>
-            <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString()}</span></p>
+            <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString('es-AR', {maximumFractionDigits: 2})}</span></p>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
             <div class="badge-estado badge-${estadoLimpio}">${estadoRaw.toUpperCase()}</div>
@@ -303,7 +303,7 @@ document.getElementById('textoTotal').innerText = `${total} CLIENTES`;
                 <div class="progreso-header" style="display:flex; justify-content:space-between; align-items:center;">
                     <span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                        $ ${(prestamo?.total_devolver || 0).toLocaleString()} · ${cuotasPagadas}/${cuotasTotales} cuotas
+                        $ ${(prestamo?.total_devolver || 0).toLocaleString('es-AR', {maximumFractionDigits: 2})} · ${cuotasPagadas}/${cuotasTotales} cuotas
                     </span>
                 </div>
                 <div class="barra-fondo">
@@ -459,7 +459,7 @@ btnMenos.onclick = () => { if(cuotasSeleccionadas > 1) { cuotasSeleccionadas--; 
 function actualizarMontoCobro() {
     displayCant.innerText = cuotasSeleccionadas;
     const total = cuotasSeleccionadas * VALOR_CUOTA_BASE;
-    displayMontoFinal.innerText = `$ ${total.toLocaleString()}`;
+    displayMontoFinal.innerText = `$ ${total.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
 }
 
 btnCerrarCobroX.onclick = () => modalCobro.classList.remove('active');
@@ -492,9 +492,9 @@ function abrirModalCobro(cliente) {
     clienteSeleccionado = cliente;
     cuotasAPagar = 1;
 
-document.getElementById('cobroMonto').innerText = `$ ${prestamo.monto_prestado.toLocaleString()}`;
-document.getElementById('cobroTotal').innerText = `$ ${prestamo.total_devolver.toLocaleString()}`;
-document.getElementById('cobroCuota').innerText = `$ ${prestamo.valor_cuota.toLocaleString()}`;
+document.getElementById('cobroMonto').innerText = `$ ${prestamo.monto_prestado.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
+document.getElementById('cobroTotal').innerText = `$ ${prestamo.total_devolver.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
+document.getElementById('cobroCuota').innerText = `$ ${prestamo.valor_cuota.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
 document.getElementById('cobroProgreso').innerText = `${pagadas}/${totales}`;
     const restantes = totales - pagadas;
 
@@ -523,7 +523,7 @@ function actualizarCalculoCobro() {
 
     const total = cuotasAPagar * prestamo.valor_cuota;
 
-    displayMontoFinal.innerText = `$ ${total.toLocaleString()}`;
+    displayMontoFinal.innerText = `$ ${total.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
 }
 
 // Botón +
@@ -653,7 +653,7 @@ function abrirModalDetalles(cliente) {
     
     // Campos de garantía (Seña / Producto)
     document.getElementById('det-sena').value = cliente.garantia_producto || "-";
-    document.getElementById('det-monto').value = cliente.garantia_valor ? `$ ${cliente.garantia_valor.toLocaleString()}` : "-";
+    document.getElementById('det-monto').value = cliente.garantia_valor ? `$ ${cliente.garantia_valor.toLocaleString('es-AR', {maximumFractionDigits: 2})}` : "-";
     
     // 3. Datos del préstamo
     const prestamo = cliente.prestamos?.slice(-1)[0];
@@ -663,10 +663,10 @@ function abrirModalDetalles(cliente) {
     const cuotasTotales = prestamo?.cuotas_totales || 0;
     const valorCuota = prestamo?.valor_cuota || 0;
 
-    document.getElementById('det-prestado').value = `$ ${montoPrestado.toLocaleString()}`;
-    document.getElementById('det-adevolver').value = `$ ${montoTotal.toLocaleString()}`;
+    document.getElementById('det-prestado').value = `$ ${montoPrestado.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
+    document.getElementById('det-adevolver').value = `$ ${montoTotal.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
     document.getElementById('det-cuotas-resumen').value = `${cuotasPagas} / ${cuotasTotales}`;
-    document.getElementById('det-valor-cuota').value = `$ ${Math.round(valorCuota).toLocaleString('es-AR')}`;
+    document.getElementById('det-valor-cuota').value = `$ ${Math.round(valorCuota).toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
 
     // 4. Lógica de la barra de progreso (CON COLORES DINÁMICOS)
     const barra = document.getElementById('det-progreso-barra');
@@ -724,7 +724,7 @@ function abrirModalDetalles(cliente) {
                     <p class="cuota-fecha">${fechaCuota.toLocaleDateString('es-AR')}</p>
                 </div>
                 <div class="cuota-monto-status">
-                    <p class="cuota-monto">$ ${valorCuota.toLocaleString('es-AR')}</p>
+                    <p class="cuota-monto">$ ${valorCuota.toLocaleString('es-AR', {maximumFractionDigits: 2})}</p>
                     <span class="badge-cuota ${estaPagada ? 'pagada' : estaAtrasada ? 'atrasada' : 'pendiente'}">
                         ${estaPagada ? 'PAGADA' : estaAtrasada ? 'ATRASADO' : 'PENDIENTE'}
                     </span>
@@ -1019,8 +1019,8 @@ function calcularPrestamo() {
         document.getElementById('oto-fecha-fin').value = fechaFin.toISOString().split('T')[0];
     }
 
-    document.getElementById('res-total').innerText = `$ ${totalADevolver.toLocaleString('es-AR')}`;
-    document.getElementById('res-cuota').innerText = `$ ${Math.round(valorCuota).toLocaleString('es-AR')}`;
+    document.getElementById('res-total').innerText = `$ ${totalADevolver.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
+    document.getElementById('res-cuota').innerText = `$ ${Math.round(valorCuota).toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
 }
 
 

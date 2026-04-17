@@ -29,7 +29,7 @@ html, body {
     --texto-secundario: #64748b;   /* Gris medio para "10 clientes" o "Adeuda" */
     
     /* Bordes y Sombras */
-    --borde-suave: #e2e8f0;
+    --borde-suave: #dfe6f0;
     --sombra-tarjeta: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 
     /* Estados (Badges de la imagen) */
@@ -897,7 +897,7 @@ font-size: 13px;}
     align-items: center;
     justify-content: center;
     gap: 1px;
-    padding: 10px 0 10px 0;
+    padding: 17px 0 10px 0;
 }
 
 .btn-pag {
@@ -909,7 +909,7 @@ font-size: 13px;}
     border-radius: 5px;
     border: none;
     background: var(--barra-estado);
-    color: var(--texto-principal);
+    color: var(--mostrando-clientes);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -2466,7 +2466,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     .modal-titulo p {
-        font-size: 10px;
+        font-size: 12px;
         margin-top: 3px;
     }
 
@@ -2861,4 +2861,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .info-item strong {
     color: var(--texto-secundario);
     font-weight: 400;
+}
+
+.seccion-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.seccion-titulo svg{
+    color: var(--color-primario);
 }
