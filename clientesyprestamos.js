@@ -1098,3 +1098,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 });
+
+
+
+// FUNCIÓN PARA CERRAR SESIÓN
+function cerrarSesion() {
+    // 1. Borramos los datos de la sesión (ajusta según lo que uses: localStorage o sessionStorage)
+    localStorage.removeItem('user_session'); // O como se llame tu clave de usuario
+    localStorage.removeItem('isLoggedIn');
+    
+    // 2. Si usas Supabase, agrega también:
+    // await supabase.auth.signOut(); 
+
+    // 3. Redirigimos al Login (ajusta el nombre de tu archivo de entrada)
+    window.location.href = 'index.html'; 
+}
+
+// 4. Vinculamos la función al botón del Sidebar
+// Busca el ID de tu botón de logout, por ejemplo 'btn-logout'
+const btnLogout = document.getElementById('btn-logout');
+
+if (btnLogout) {
+    btnLogout.addEventListener('click', (e) => {
+        e.preventDefault(); // Evita que el enlace recargue la página
+        cerrarSesion();
+    });
+}
