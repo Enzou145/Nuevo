@@ -854,28 +854,36 @@ document.getElementById('btnCancelarEditar').onclick = () => {
 /* ==========================================
    LÓGICA OTORGAR PRÉSTAMO (SUBIR A DB)
    ========================================== */
+/* ==========================================
+   LÓGICA OTORGAR PRÉSTAMO (SUBIR A DB)
+   ========================================== */
 function prepararOtorgar(cliente) {
     clienteSeleccionado = cliente; 
 
-    // Llenar el nombre en el modal
-    const elNombre = document.getElementById('nombreClientePrestamo') || document.getElementById('oto-nombre');
-    if(elNombre) {
-        if(elNombre.tagName === 'INPUT') elNombre.value = `${cliente.nombre} ${cliente.apellido || ''}`;
-        else elNombre.innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
-    }
+    // 1. Limpiar el monto para que no quede el del cliente anterior
+    const montoInput = document.getElementById('oto-monto');
+    if(montoInput) montoInput.value = "";
 
-    // Agrega esto dentro de prepararOtorgar(), después de donde ya llenas oto-nombre
+    // 2. Llenar el nombre en el modal
     const subNombre = document.getElementById('oto-nombre-sub');
     if (subNombre) subNombre.innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
 
-    // Fecha hoy
+    // 3. Sincronizar Frecuencia: Asegurar que el input oculto coincida con el botón azul
+    const btnActivo = document.querySelector('.oto-frec-btn.oto-frec-active');
+    if (btnActivo) {
+        document.getElementById('oto-frec-tipo').value = btnActivo.dataset.value;
+    }
+
+    // 4. Fecha Inicio: Hoy
     const inputFecha = document.getElementById('oto-fecha-inicio');
     if(inputFecha) inputFecha.valueAsDate = new Date();
 
+    // 5. Mostrar modal y CALCULAR INMEDIATAMENTE
     document.getElementById('modalOtorgar').classList.add('active');
+    
+    // Ejecutamos el cálculo para que la Fecha Fin se actualice al abrir
     calcularPrestamo();
 }
-
 
 function seleccionarFrecuencia(btn) {
     document.querySelectorAll('#modalOtorgar .oto-frec-btn').forEach(b => b.classList.remove('oto-frec-active'));
@@ -1083,6 +1091,24 @@ function aplicarFiltros() {
 document.addEventListener('DOMContentLoaded', () => {
     cargarClientesDB();
 
+
+      // === AGREGA ESTO DESDE AQUÍ ===
+    if (usuarioLogueado && usuarioLogueado.nombre) {
+        const displayNombre = document.getElementById('sidebar-user-name');
+        const displayAvatar = document.getElementById('user-avatar-initial');
+
+        if (displayNombre) {
+            displayNombre.innerText = usuarioLogueado.nombre;
+        }
+        if (displayAvatar) {
+            // Usamos tu función obtenerIniciales que ya tienes en el JS
+            displayAvatar.innerText = obtenerIniciales(usuarioLogueado.nombre);
+        }
+    }
+    // === HASTA AQUÍ ===
+
+
+
     document.getElementById('btnAnterior').onclick = () => {
         if (paginaActual > 1) {
             paginaActual--;
@@ -1124,3 +1150,41 @@ if (btnLogout) {
         cerrarSesion();
     });
 }
+
+
+
+
+
+
+// Función para forzar la actualización del nombre en el sidebar
+function actualizarNombreRealSidebar() {
+    // Buscamos el usuario en el storage (probamos con varias llaves comunes)
+    const data = localStorage.getItem('usuarioLogueado') || localStorage.getItem('usuario') || localStorage.getItem('user');
+    
+    if (data) {
+        try {
+            const user = JSON.parse(data);
+            // Buscamos el nombre (probamos .nombre, .name o .username)
+            const nombreParaMostrar = user.nombre || user.name || user.username || "Usuario";
+            
+            const elNombre = document.getElementById('sidebar-user-name');
+            const elAvatar = document.getElementById('user-avatar-initial');
+
+            if (elNombre) elNombre.innerText = nombreParaMostrar;
+            
+            if (elAvatar) {
+                // Si tienes la función de iniciales la usamos, si no, la primera letra
+                elAvatar.innerText = (typeof obtenerIniciales === 'function') 
+                    ? obtenerIniciales(nombreParaMostrar) 
+                    : nombreParaMostrar.charAt(0).toUpperCase();
+            }
+        } catch (e) {
+            console.error("Error al parsear el usuario:", e);
+        }
+    }
+}
+
+// Lo ejecutamos cuando cargue el DOM
+document.addEventListener('DOMContentLoaded', actualizarNombreRealSidebar);
+// Y lo ejecutamos una vez más por si acaso el DOM ya estaba listo
+actualizarNombreRealSidebar();
