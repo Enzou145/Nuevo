@@ -974,7 +974,6 @@ font-size: 13px;}
     text-transform: uppercase;
     letter-spacing: 1px;
     padding-left: 12px;
-    margin-top: 10px;
 }
 
 .menu-labell {
@@ -991,8 +990,8 @@ font-size: 13px;}
 .barrita{
 background-color: var(--borde-suave);
 height: 1px;
-margin-top: 5px;
-margin-bottom: 5px;
+margin-top: 15px;
+margin-bottom: 15px;
 }
 
 /* BOTONES DEL MENÚ */
@@ -1022,8 +1021,8 @@ font-size: 13px;}
 .barritaa {
     background-color: var(--borde-suave);
 height: 1px;
-margin-top: 6px;
-margin-bottom: 6px;
+margin-top: 15px;
+margin-bottom: 15px;
 
 }
 
