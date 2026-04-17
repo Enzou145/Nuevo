@@ -22,6 +22,10 @@ const sidebar = document.querySelector('.sidebar');
 const menuToggle = document.getElementById('menuToggle');
 const overlay = document.getElementById('sidebarOverlay');
 
+const CLIENTES_POR_PAGINA = 8;
+let paginaActual = 1;
+let clientesFiltrados = [];
+
 
 //CAMBIAR TEMA (COLORES)
 const btnTema = document.getElementById('btn-tema');
@@ -174,12 +178,35 @@ function obtenerIniciales(nombreCompleto) {
    3. FUNCIÓN DE RENDERIZADO (DIBUJAR LISTA)
    ========================================== */
 function renderizarClientes(datos) {
+    clientesFiltrados = datos;
+    paginaActual = 1;
+    renderizarPagina();
+}
+
+function renderizarPagina() {
     if (!listaContenedor) return;
     listaContenedor.innerHTML = '';
-    
-    if (contadorTexto) contadorTexto.innerText = `${datos.length} clientes`;
 
-    datos.forEach(cliente => { 
+    const total = clientesFiltrados.length;
+    const totalPaginas = Math.max(1, Math.ceil(total / CLIENTES_POR_PAGINA));
+    if (paginaActual > totalPaginas) paginaActual = totalPaginas;
+
+    const inicio = (paginaActual - 1) * CLIENTES_POR_PAGINA;
+    const fin = Math.min(inicio + CLIENTES_POR_PAGINA, total);
+    const clientesPagina = clientesFiltrados.slice(inicio, fin);
+
+   
+    // Paginación
+    document.getElementById('infoPagina').innerText = `${paginaActual} / ${totalPaginas}`;
+    document.getElementById('btnAnterior').disabled = paginaActual <= 1;
+    document.getElementById('btnSiguiente').disabled = paginaActual >= totalPaginas;
+
+    // AGREGAR ESTO ↓
+document.getElementById('textoMostrando').innerText = total === 0 ? 'Sin clientes' : `Mostrando ${inicio + 1}–${fin}`;
+document.getElementById('textoTotal').innerText = `${total} CLIENTES`;
+
+    // === TODO LO DE ABAJO ES EXACTAMENTE IGUAL, SOLO CAMBIA datos.forEach → clientesPagina.forEach ===
+    clientesPagina.forEach(cliente => { 
         const prestamo = cliente.prestamos?.slice(-1)[0];
         const cuotasPagadas = prestamo?.cuotas_pagadas || 0;
         const cuotasTotales = prestamo?.cuotas_totales || 0;
@@ -189,12 +216,10 @@ function renderizarClientes(datos) {
             : 0;
         
         const nombreCompleto = `${cliente.nombre} ${cliente.apellido || ''}`;
-        
-        // CORRECCIÓN AQUÍ: Agregamos un valor por defecto para que no explote si el estado es null
         const estadoRaw = cliente.estado || 'sin prestamo';
         const estadoLimpio = estadoRaw.toLowerCase().replace(/\s+/g, '-');
-        
-        const iniciales = ((cliente.nombre?.charAt(0) || '') + (cliente.apellido?.charAt(0) || '')).toUpperCase();        const direccionCompleta = `${cliente.calle || ''} ${cliente.nro_calle || ''} (${cliente.barrio || ''})`;
+        const iniciales = ((cliente.nombre?.charAt(0) || '') + (cliente.apellido?.charAt(0) || '')).toUpperCase();
+        const direccionCompleta = `${cliente.calle || ''} ${cliente.nro_calle || ''} (${cliente.barrio || ''})`;
 
         const card = document.createElement('div');
         card.className = `cliente-card status-${estadoLimpio}`;
@@ -236,21 +261,17 @@ function renderizarClientes(datos) {
                 Cobrar cuota
             </button>`
         }
-    </div>
-`;
+    </div>`;
 
-card.innerHTML = `
+        card.innerHTML = `
     <div class="cliente-header">
         <div class="cliente-avatar">${iniciales}</div>
         <div class="cliente-info">
             <h3>${nombreCompleto}</h3>
             <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString()}</span></p>
         </div>
-        
         <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="badge-estado badge-${estadoLimpio}">
-                ${estadoRaw.toUpperCase()}
-            </div>
+            <div class="badge-estado badge-${estadoLimpio}">${estadoRaw.toUpperCase()}</div>
             <div class="chevron-detalle">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                     <polyline points="6 9 12 15 18 9"></polyline>
@@ -258,46 +279,30 @@ card.innerHTML = `
             </div>
         </div>
     </div>
-
     <div class="cliente-detalles">
         <div class="info-grid">
             <div class="info-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                    <line x1="2" y1="10" x2="22" y2="10"></line>
-                </svg>
-                <strong>DNI:</strong> ${cliente.dni || '-'}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                <strong>Dni:</strong> ${cliente.dni || '-'}
             </div>
             <div class="info-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                </svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                 <strong>Tel:</strong> ${cliente.telefono || '-'}
             </div>
             <div class="info-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                </svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                 <strong>Loc:</strong> ${direccionCompleta}
             </div>
             <div class="info-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                </svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                 <strong>Job:</strong> ${cliente.ocupacion || '-'}
             </div>
         </div>
-        
         ${!esNuevo ? `
             <div class="cuotas-progreso">
                 <div class="progreso-header" style="display:flex; justify-content:space-between; align-items:center;">
                     <span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;">
-                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                            <line x1="1" y1="10" x2="23" y2="10"></line>
-                        </svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                         $ ${(prestamo?.total_devolver || 0).toLocaleString()} · ${cuotasPagadas}/${cuotasTotales} cuotas
                     </span>
                 </div>
@@ -307,8 +312,8 @@ card.innerHTML = `
             </div>
         ` : ''}
         ${accionesHTML} 
-    </div>
-`;
+    </div>`;
+
         card.onclick = (e) => { if(!e.target.closest('button')) card.classList.toggle('expanded'); };
         card.querySelector('.btn-ver-detalles').onclick = (e) => { e.stopPropagation(); abrirModalDetalles(cliente); };
 
@@ -323,7 +328,6 @@ card.innerHTML = `
         listaContenedor.appendChild(card);
     });
 }
-
 
 let clienteAEliminarId = null;
 
@@ -700,9 +704,15 @@ function abrirModalDetalles(cliente) {
 
             const estaPagada = i <= cuotasPagas;
 
+            // ← AGREGAR ESTO
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const estaAtrasada = !estaPagada && fechaCuota < hoy;
+
+
             // Crear el elemento de la cuota con el estilo de la imagen
             const item = document.createElement('div');
-            item.className = `cuota-item ${estaPagada ? 'pagada' : ''}`;
+            item.className = `cuota-item ${estaPagada ? 'pagada' : estaAtrasada ? 'atrasada' : ''}`;
             item.innerHTML = `
                 <div class="cuota-info">
                     <p class="cuota-numero">Cuota ${i}</p>
@@ -710,7 +720,9 @@ function abrirModalDetalles(cliente) {
                 </div>
                 <div class="cuota-monto-status">
                     <p class="cuota-monto">$ ${valorCuota.toLocaleString('es-AR')}</p>
-                    <span class="badge-cuota ${estaPagada ? 'pagada' : 'pendiente'}">${estaPagada ? 'PAGADA' : 'PENDIENTE'}</span>
+                    <span class="badge-cuota ${estaPagada ? 'pagada' : estaAtrasada ? 'atrasada' : 'pendiente'}">
+                        ${estaPagada ? 'PAGADA' : estaAtrasada ? 'ATRASADO' : 'PENDIENTE'}
+                    </span>
                 </div>
             `;
             historialDiv.appendChild(item);

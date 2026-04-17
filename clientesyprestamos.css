@@ -52,6 +52,9 @@ html, body {
     --avatar-celeste: #06b6d4;
 
     --barra-estado: #bfcde1;
+
+    --mostrando-clientes: #363636;
+    --clientes-totales: #363636;
 }
 
 /* TEMA OSCURO (Adaptación profesional) */
@@ -85,6 +88,10 @@ html, body {
     --otros-texto: #cbd5e1;
 
     --barra-estado: #233247;
+
+    --mostrando-clientes: #b5b5b5;
+    --clientes-totales: #6366f1;
+
 }
 
 
@@ -560,7 +567,6 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 15px;
 }
 
 /* --- TARJETA BASE Y LÓGICA DE COLORES POR ESTADO --- */
@@ -704,6 +710,9 @@ html, body {
     font-weight: 500;
 }
 
+.info-item text{
+color: #06b6d4;}
+
 /* BARRA DE PROGRESO */
 .cuotas-progreso {
     background-color: var(--otros-fondo);
@@ -845,6 +854,24 @@ html, body {
 }
 
 
+
+.btn-pag:disabled { opacity: 0.3; cursor: not-allowed; }
+
+#contadorInfo{
+display: flex;
+justify-content: space-between;
+margin: 5px 5px;
+}
+
+#textoMostrando{
+color: var(--mostrando-clientes);
+font-weight: 600;
+font-size: 13px;}
+
+#textoTotal{
+color: var(--clientes-totales);
+font-weight: 600;
+font-size: 13px;}
 /*--------------------------------- SIDEBAR -------------------------------------------*/
 
 /* --- CONTENEDOR SIDEBAR --- */
@@ -1534,7 +1561,7 @@ padding: 0;}
 .progreso-container {
     background: var(--fondo-input);
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 8px;
     margin: 16px 0;
 }
 
@@ -1554,7 +1581,7 @@ padding: 0;}
     height: 100%;
     width: 0%;              /* Empieza en 0, el JS le dará el ancho */
     background-color: #22c55e; /* Color verde de éxito */
-    border-radius: 10px;
+    border-radius: 2px;
     transition: width 0.5s ease; /* Para que se llene con una animación suave */
 }
 
@@ -1579,6 +1606,11 @@ padding: 0;}
 
 .cuota-item.pagada {
     border-left: 6px solid var(--exito-texto);
+}
+
+.cuota-item.atrasada{
+    border-left: 6px solid var(--peligro-texto);
+    background-color: #ff474727;
 }
 
 .cuota-item p { margin: 0; color: var(--texto-principal); }
@@ -1669,6 +1701,7 @@ padding: 0;}
     align-items: center;
     margin-bottom: 10px;
     border-left: 5px solid transparent;
+    border: 1px solid var(--borde-suave);
 }
 
 .cuota-item.pagada {
@@ -1691,8 +1724,15 @@ padding: 0;}
     padding: 4px 8px;
     border-radius: 6px;
 }
-.badge-cuota.pagada { background: #dcfce7; color: #16a34a; }
+.badge-cuota.pagada { background: #16a34a; color: #f7fffa; }
 .badge-cuota.pendiente { background: #e2e8f0; color: #64748b; }
+
+.badge-cuota.atrasada { background: #ef4444; color: #ffffff; }
+
+.cuota-item.atrasada {
+    border-left-color: 2px #ef4444;
+}
+.tema-oscuro .cuota-item.atrasada { background: rgba(239, 68, 68, 0.1); }
 
 
 /* -------------------- MODAL EDITAR CLIENTE ----------------*/
@@ -1875,14 +1915,14 @@ background-color: var(--fondo-tarjeta) !important;}
     padding: 16px 0 8px;
 }
 
-.oto-field { display: flex; flex-direction: column; }
+.oto-field { display: flex; flex-direction: column;}
 
 .oto-label {
     font-size: 0.62rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     color: var(--texto-secundario);
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
 
 /* INPUT CON PREFIJO $ */
@@ -1891,9 +1931,9 @@ background-color: var(--fondo-tarjeta) !important;}
     align-items: center;
     background: var(--fondo-input);
     border: 1.5px solid var(--borde-suave);
-    border-radius: 14px;
+    border-radius: 8px;
     padding: 0 14px;
-    height: 48px;
+    height: 40px;
     gap: 6px;
     transition: border-color 0.2s;
 }
@@ -1923,33 +1963,29 @@ background-color: var(--fondo-tarjeta) !important;}
 /* STEPPER */
 .oto-stepper {
     display: flex;
-    align-items: center;
     background: var(--fondo-input);
     border: 1.5px solid var(--borde-suave);
-    border-radius: 14px;
-    overflow: hidden;
-    height: 48px;
+    border-radius: 8px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+
 }
 
 .oto-step-btn {
-    width: 52px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-size: 1.3rem;
     font-weight: 700;
     cursor: pointer;
     color: var(--color-primario);
     background: transparent;
     user-select: none;
-    flex-shrink: 0;
     transition: background 0.15s;
+    display: flex;
+    justify-content: center;
 }
 .oto-step-btn:hover { background: rgba(99,102,241,0.12); }
 
 .oto-step-input {
-    flex: 1;
     border: none;
     outline: none;
     text-align: center;
@@ -1970,8 +2006,8 @@ background-color: var(--fondo-tarjeta) !important;}
 }
 
 .oto-frec-btn {
-    padding: 11px 0;
-    border-radius: 14px;
+    padding: 8px 0;
+    border-radius: 8px;
     border: none;
     font-size: 0.88rem;
     font-weight: 600;
@@ -1999,21 +2035,20 @@ background-color: var(--fondo-tarjeta) !important;}
     /* redefine solo el área de fechas con sub-grid */
 }
 
-/* Hack limpio: ponemos las fechas en fila usando una clase extra en el grid */
-.oto-fechas-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px;
-}
+
 
 .oto-date-wrap {
     display: flex;
     align-items: center;
     background: var(--fondo-input);
     border: 1.5px solid var(--borde-suave);
-    border-radius: 14px;
+    border-radius: 8px;
     height: 48px;
     transition: border-color 0.2s;
+    width: 140px;
+    padding: 0;
+    justify-content: center;
+    
 }
 .oto-date-wrap:focus-within { border-color: var(--color-primario); }
 
@@ -2125,7 +2160,7 @@ background-color: var(--fondo-tarjeta) !important;}
 
 /* Header del modal */
 #modalOtorgar .modal-header-prestamo {
-    padding: 12px 24px 12px;
+    padding: 10px 24px 10px;
     border-bottom: 1px solid var(--borde-suave);
     flex-shrink: 0;
 }
@@ -2185,13 +2220,16 @@ background-color: var(--fondo-tarjeta) !important;}
 .oto-btn-cancel {
     background: transparent;
     border: 1.5px solid var(--borde-suave);
-    padding: 13px 10px;
-    border-radius: 14px;
+    border-radius: 10px;
     font-weight: 700;
     font-size: 0.9rem;
     color: var(--texto-principal);
     cursor: pointer;
     transition: opacity 0.2s;
+    height: 40px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
 }
 
 /* Quitar campo oto-nombre (input oculto — ya no se muestra) */
@@ -2222,23 +2260,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Centrar las fechas y labels */
 .oto-fechas-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    margin-top: 5px;
+    display: flex;
+    margin-top: 7px;
+    width: 100%;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 5px;
+    
 }
 
 .oto-date-wrap {
     justify-content: center; /* Centra el contenido horizontalmente */
     padding: 0 10px;
+    align-items: center;
 }
 
 .oto-date-input {
     text-align: center; /* Centra el texto de la fecha */
-    padding-right: 20px; /* Compensa el espacio del icono de la izquierda para que se vea centrado */
+    padding-right: 0px; /* Compensa el espacio del icono de la izquierda para que se vea centrado */
 }
 
 .oto-date-icon {
-    margin-right: -15px; /* Acerca el SVG al texto centrado */
+    margin-right: -10px; /* Acerca el SVG al texto centrado */
     z-index: 1;
 }
 
@@ -2297,7 +2340,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     /* Topbar */
-    .topbar { padding: 14px 0; }
+    .topbar { padding: 30px 0; }
     .titulo-seccion h1 { font-size: 20px; }
     .btn-principal-v2 { padding: 8px 4px; font-size: 12px; }
 
@@ -2361,7 +2404,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 
     .modal-titulo p {
-        font-size: 12px;
+        font-size: 10px;
         margin-top: 3px;
     }
 
@@ -2442,7 +2485,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         width: 100%;
         height: 40px;
         font-size: 12px;
-        border-radius: 14px;
+        border-radius: 10px;
     }
 
 
@@ -2750,9 +2793,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .info-item svg {
     color: var(--texto-principal);
     flex-shrink: 0;
+    height: 14px;
 }
 
 .info-item strong {
     color: var(--texto-secundario);
-    font-weight: 600;
+    font-weight: 400;
 }
