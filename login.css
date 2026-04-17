@@ -137,11 +137,10 @@ button {
     width: 100%;
     padding: 14px;
     border: none;
-    background: #2563eb;
+    background: #4c46e0;  
     color: white;
     border-radius: 12px;
     cursor: pointer;
-    margin-top: 20px;
     font-size: 16px;
     font-weight: 600;
     transition: all 0.2s;

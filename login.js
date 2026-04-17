@@ -33,17 +33,31 @@ async function obtenerPerfilUsuario(authUserId) {
 }
 
 // Verificar sesión al cargar
+// ... (tus elementos del DOM y funciones de mensaje se mantienen igual)
+
+// MODIFICADO: Verificar sesión de forma más inteligente
 async function verificarSesionActiva() {
+    // 1. Revisamos si en la URL viene el parámetro ?logout=true
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('logout') === 'true') {
+        // Si venimos de cerrar sesión, limpiamos todo y NO redireccionamos
+        await supabaseClient.auth.signOut();
+        localStorage.clear();
+        return; 
+    }
+
+    // 2. Si no es un logout, procedemos con la verificación normal
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         const perfil = await obtenerPerfilUsuario(session.user.id);
         if (perfil) {
             localStorage.setItem("usuarioLogueado", JSON.stringify(perfil));
-            window.location.href = "clientesyprestamos.html"; // Cambia esto al nombre de tu archivo principal
+            window.location.href = "clientesyprestamos.html";
         }
     }
 }
 
+// ... (el resto de tu evento formLogin.addEventListener se mantiene igual)
 // Evento de Login
 formLogin.addEventListener("submit", async (e) => {
     e.preventDefault();

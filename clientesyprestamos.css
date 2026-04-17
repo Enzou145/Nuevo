@@ -2186,7 +2186,7 @@ background-color: var(--fondo-tarjeta) !important;}
 .oto-calc-item {
     background: var(--fondo-tarjeta);
     border-radius: 12px;
-    padding: 10px 12px;
+    padding: 10px 10px;
 }
 
 .oto-calc-label {

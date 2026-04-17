@@ -184,6 +184,7 @@ function renderizarClientes(datos) {
 }
 
 function renderizarPagina() {
+    
     if (!listaContenedor) return;
     listaContenedor.innerHTML = '';
 
@@ -268,7 +269,7 @@ document.getElementById('textoTotal').innerText = `${total} CLIENTES`;
         <div class="cliente-avatar">${iniciales}</div>
         <div class="cliente-info">
             <h3>${nombreCompleto}</h3>
-            <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString('es-AR', {maximumFractionDigits: 2})}</span></p>
+            <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString('es-AR', {maximumFractionDigits: 0})}</span></p>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
             <div class="badge-estado badge-${estadoLimpio}">${estadoRaw.toUpperCase()}</div>
@@ -492,9 +493,9 @@ function abrirModalCobro(cliente) {
     clienteSeleccionado = cliente;
     cuotasAPagar = 1;
 
-document.getElementById('cobroMonto').innerText = `$ ${prestamo.monto_prestado.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
-document.getElementById('cobroTotal').innerText = `$ ${prestamo.total_devolver.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
-document.getElementById('cobroCuota').innerText = `$ ${prestamo.valor_cuota.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
+document.getElementById('cobroMonto').innerText = `$ ${prestamo.monto_prestado.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
+document.getElementById('cobroTotal').innerText = `$ ${prestamo.total_devolver.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
+document.getElementById('cobroCuota').innerText = `$ ${prestamo.valor_cuota.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
 document.getElementById('cobroProgreso').innerText = `${pagadas}/${totales}`;
     const restantes = totales - pagadas;
 
@@ -523,7 +524,7 @@ function actualizarCalculoCobro() {
 
     const total = cuotasAPagar * prestamo.valor_cuota;
 
-    displayMontoFinal.innerText = `$ ${total.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
+    displayMontoFinal.innerText = `$ ${total.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
 }
 
 // Botón +
@@ -666,7 +667,8 @@ function abrirModalDetalles(cliente) {
     document.getElementById('det-prestado').value = `$ ${montoPrestado.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
     document.getElementById('det-adevolver').value = `$ ${montoTotal.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
     document.getElementById('det-cuotas-resumen').value = `${cuotasPagas} / ${cuotasTotales}`;
-    document.getElementById('det-valor-cuota').value = `$ ${Math.round(valorCuota).toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
+    // Antes tenía maximumFractionDigits: 2, cámbialo a 0
+    document.getElementById('det-valor-cuota').value = `$ ${Math.round(valorCuota).toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
 
     // 4. Lógica de la barra de progreso (CON COLORES DINÁMICOS)
     const barra = document.getElementById('det-progreso-barra');
@@ -724,8 +726,8 @@ function abrirModalDetalles(cliente) {
                     <p class="cuota-fecha">${fechaCuota.toLocaleDateString('es-AR')}</p>
                 </div>
                 <div class="cuota-monto-status">
-                    <p class="cuota-monto">$ ${valorCuota.toLocaleString('es-AR', {maximumFractionDigits: 2})}</p>
-                    <span class="badge-cuota ${estaPagada ? 'pagada' : estaAtrasada ? 'atrasada' : 'pendiente'}">
+                    <p class="cuota-monto">$ ${Math.round(valorCuota).toLocaleString('es-AR', {maximumFractionDigits: 0})}</p>
+                        <span class="badge-cuota ${estaPagada ? 'pagada' : estaAtrasada ? 'atrasada' : 'pendiente'}">
                         ${estaPagada ? 'PAGADA' : estaAtrasada ? 'ATRASADO' : 'PENDIENTE'}
                     </span>
                 </div>
@@ -1027,8 +1029,8 @@ function calcularPrestamo() {
         document.getElementById('oto-fecha-fin').value = fechaFin.toISOString().split('T')[0];
     }
 
-    document.getElementById('res-total').innerText = `$ ${totalADevolver.toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
-    document.getElementById('res-cuota').innerText = `$ ${Math.round(valorCuota).toLocaleString('es-AR', {maximumFractionDigits: 2})}`;
+    document.getElementById('res-total').innerText = `$ ${totalADevolver.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
+    document.getElementById('res-cuota').innerText = `$ ${Math.round(valorCuota).toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
 }
 
 
@@ -1128,16 +1130,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // FUNCIÓN PARA CERRAR SESIÓN
-function cerrarSesion() {
-    // 1. Borramos los datos de la sesión (ajusta según lo que uses: localStorage o sessionStorage)
-    localStorage.removeItem('user_session'); // O como se llame tu clave de usuario
-    localStorage.removeItem('isLoggedIn');
-    
-    // 2. Si usas Supabase, agrega también:
-    // await supabase.auth.signOut(); 
+async function cerrarSesion() {
+    try {
+        // 1. Cerramos sesión en el servidor de Supabase
+        await supabaseClient.auth.signOut();
+        
+        // 2. Limpiamos TODA la basura del navegador
+        localStorage.clear();
+        sessionStorage.clear();
 
-    // 3. Redirigimos al Login (ajusta el nombre de tu archivo de entrada)
-    window.location.href = 'index.html'; 
+        // 3. Redirigimos al login con un parámetro para evitar el auto-login
+        // Usamos replace para que no pueda volver atrás con el botón del celular
+        window.location.replace('index.html?logout=true'); 
+    } catch (error) {
+        console.error("Error al salir:", error);
+        window.location.href = 'index.html?logout=true';
+    }
 }
 
 // 4. Vinculamos la función al botón del Sidebar
