@@ -604,6 +604,11 @@ document.getElementById('btnCerrarCobro').onclick = () => {
     document.getElementById('modalCobrarCuota').classList.remove('active');
 };
 
+// Botón Cancelar
+document.querySelector('.btn-cancelar-finall').onclick = () => {
+    document.getElementById('modalCobrarCuota').classList.remove('active');
+};
+
 
 async function eliminarPrestamo(prestamoId, clienteId) {
 
@@ -1077,4 +1082,19 @@ function aplicarFiltros() {
    ========================================== */
 document.addEventListener('DOMContentLoaded', () => {
     cargarClientesDB();
+
+    document.getElementById('btnAnterior').onclick = () => {
+        if (paginaActual > 1) {
+            paginaActual--;
+            renderizarPagina();
+        }
+    };
+
+    document.getElementById('btnSiguiente').onclick = () => {
+        const totalPaginas = Math.ceil(clientesFiltrados.length / CLIENTES_POR_PAGINA);
+        if (paginaActual < totalPaginas) {
+            paginaActual++;
+            renderizarPagina();
+        }
+    };
 });
