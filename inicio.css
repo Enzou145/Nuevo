@@ -3,8 +3,7 @@
     padding: 0;
     box-sizing: border-box;
     /* Aplicar la fuente a TODO el documento */
-    font-family: 'Poppins', sans-serif;
-}
+    font-family: 'Poppins', sans-serif;}
 
 
 body {
@@ -18,9 +17,7 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 0; /* Evita que el contenido desborde el flex */
-
 }
-
 
 
 /* TEMA CLARO (Basado exactamente en la imagen) */
@@ -82,7 +79,9 @@ body {
     --card-amarillo-bg: #fef3c7;
     --card-amarillo-txt: #a16207;
 
-    --card-borde: rgba(0, 0, 0, 0.05);}
+    --card-borde: rgba(0, 0, 0, 0.05);
+
+    --card-inicio: rgba(0, 0, 0, 0.03);}
 
 
 /* TEMA OSCURO (Adaptación profesional) */
@@ -225,7 +224,6 @@ body {
 }
 
 
-
 /*----------------------------- CARD TORTA ---------------------------*/
 /*----------------------------- CARD TORTA ACTUALIZADA ---------------------------*/
 
@@ -359,7 +357,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--card-borde);
+  background: var(--card-inicio);
   border: 1px solid var(--card-borde);
   border-radius: 10px;
   padding: 10px 12px;
@@ -765,7 +763,6 @@ margin-bottom: 15px;
 }
 
 
-
 /*--------------------- CARD TOP CLIENTES --------------------*/
 /*--------------------- CARD TOP CLIENTES ACTUALIZADA --------------------*/
 
@@ -801,7 +798,7 @@ margin-bottom: 15px;
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px;
-    background: var(--card-borde);
+    background: var(--card-inicio);
     border: 1px solid var(--card-borde);
     border-radius: 10px;
     transition: transform 0.2s;
