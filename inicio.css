@@ -311,10 +311,11 @@ body {
 .leyenda-dot--gris     { background: var(--otros-texto); }
 .leyenda-dot--amarillo { background: var(--alerta-texto); }
 
-.leyenda-nombre {
+.leyenda-nombre {   
   font-size: 13px;
   font-weight: 600;
   color: var(--texto-secundario);
+
 }
 
 .leyenda-num {
@@ -423,7 +424,7 @@ body {
 }
 
 /* Naranja para Hoy/Mañana */
-.cobro-fecha--alerta, .cobro-monto--alerta {
+.cobro-fecha--alerta {
     color: #f59e0b !important; /* Naranja */
     display: flex;
     align-items: center;
@@ -922,24 +923,32 @@ margin-bottom: 15px;
         flex-shrink: 0; /* Evita que el gráfico se aplaste */
     }
 
+   /* 3. Ajuste de Card Torta */
     .torta-leyenda {
         display: flex;
-        flex-direction: column; /* Los items uno debajo de otro */
-        grid-template-columns: none; /* Quitamos el grid anterior si existía */
+        flex-direction: column;
         width: 100%;
-        gap: 8px;
-        margin-left: 30px;
+        gap: 10px;
+        margin-left: 20px; /* Ajustado para dar más espacio al texto */
     }
 
     .leyenda-item {
-        font-size: 11px; /* Texto pequeño para que no desborde */
-        gap: 6px;
+        display: flex;
+        align-items: center;
+        width: 95%;
+        font-size: 11px;
+        position: relative;
     }
 
     .leyenda-color {
         width: 10px;
         height: 10px;
     }
+
+    .leyenda-num{
+    width: 100;
+    position: absolute;
+    right: 0;}
 
     /* 4. Ajustes en Card Cobros y Top Clientes */
     .card-cobros, .card-topc {
