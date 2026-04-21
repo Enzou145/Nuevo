@@ -303,6 +303,7 @@ body {
 
 .leyenda-nombre {
   font-size: 13px;
+  font-weight: 600;
   color: var(--texto-secundario);
 }
 
@@ -836,6 +837,7 @@ margin-bottom: 15px;
 
     .card-label {
         font-size: 11px; /* Texto más pequeño para que no rompa */
+        font-weight: 700;
     }
 
     .card-valor {
@@ -886,7 +888,7 @@ margin-bottom: 15px;
 
     .cobro-nombre, .top-nombre {
         font-size: 14px;
-        max-width: 120px; /* Evita que nombres largos rompan la línea */
+        max-width: 160px; /* Evita que nombres largos rompan la línea */
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
