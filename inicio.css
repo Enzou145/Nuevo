@@ -327,7 +327,7 @@ body {
 
 .cobros-titulo {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--texto-principal);
   margin: 0 0 12px 0;
 }
@@ -885,11 +885,12 @@ margin-bottom: 15px;
     }
 
     .cobro-nombre, .top-nombre {
-        font-size: 12px;
+        font-size: 13px;
         max-width: 120px; /* Evita que nombres largos rompan la línea */
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-weight: 700;
     }
 
     .cobro-monto, .top-monto {
