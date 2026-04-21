@@ -229,8 +229,8 @@ body {
 }
 
 .torta-titulo {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--texto-principal);
   margin: 0 0 12px 0;
 }
@@ -267,7 +267,7 @@ body {
 }
 
 .torta-centro-label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--texto-secundario);
 }
 
@@ -302,7 +302,7 @@ body {
 .leyenda-dot--amarillo { background: var(--alerta-texto); }
 
 .leyenda-nombre {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--texto-secundario);
 }
 
@@ -326,7 +326,7 @@ body {
 }
 
 .cobros-titulo {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--texto-principal);
   margin: 0 0 12px 0;
@@ -735,8 +735,8 @@ margin-bottom: 15px;
 }
 
 .card-topc h2 {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--texto-principal);
     margin: 0 0 12px 0;
 }
@@ -885,7 +885,7 @@ margin-bottom: 15px;
     }
 
     .cobro-nombre, .top-nombre {
-        font-size: 13px;
+        font-size: 14px;
         max-width: 120px; /* Evita que nombres largos rompan la línea */
         white-space: nowrap;
         overflow: hidden;
@@ -894,7 +894,7 @@ margin-bottom: 15px;
     }
 
     .cobro-monto, .top-monto {
-        font-size: 12px;
+        font-size: 13px;
     }
 
     /* 5. Topbar móvil */
