@@ -189,7 +189,7 @@ body {
 }
 
 .card-valor {
-    font-size: 2rem; /* Tamaño grande para el monto */
+    font-size: 1.5rem; /* Tamaño grande para el monto */
     font-weight: 800;
     margin-top: 5px;
 }
@@ -198,7 +198,7 @@ body {
 
 /* Azul / Violeta fuerte */
 .card--azul .card-label, .card--azul svg { color: var(--texto-secundario); }
-.card--azul .card-valor { color: #3b82f6; }
+.card--azul .card-valor { color:var(--color-primario); }
 
 /* Naranja / Amarillo */
 .card--amarillo .card-label, .card--amarillo svg { color:var(--texto-secundario); }
@@ -206,7 +206,7 @@ body {
 
 /* Violeta */
 .card--violeta .card-label, .card--violeta svg { color: var(--texto-secundario); }
-.card--violeta .card-valor { color: var(--color-primario) }
+.card--violeta .card-valor { color:  #3b82f6; }
 
 /* Verde */
 .card--verde .card-label, .card--verde svg { color: var(--texto-secundario); }
@@ -366,8 +366,7 @@ body {
 
 /* Estado Urgente */
 .cobro-item--urgente {
-  border-color: var(--card-borde); /* Nueva variable para bordes de error */
-  background: var(--peligro-fondo);  /* Nueva variable para fondos de error suaves */
+  border-left: 2px solid #d33939; /* Nueva variable para bordes de error */
 }
 
 /* Info izquierda */
@@ -388,20 +387,53 @@ body {
   color: var(--texto-secundario);
 }
 
-.cobro-fecha--urgente {
-  color: var(--peligro-texto);
-}
+
 
 /* Monto derecha */
 .cobro-monto {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--texto-principal);
   white-space: nowrap;
 }
 
-.cobro-monto--urgente {
-  color: var(--peligro-texto);
+
+/* Estado de Alerta (Hoy y Mañana) */
+.cobro-item--alerta {
+    border-left: 2px solid #f59e0b; /* Borde naranja */
+}
+
+
+/* Ajuste para que el SVG del reloj se vea bien */
+.cobro-fecha svg {
+    flex-shrink: 0;
+}
+
+/* Estado Normal (Más de 2 días) */
+.cobro-item--normal {
+    border-left: 2px solid var(--texto-principal); /* Borde blanco como pediste */
+}
+
+
+/* Rojo para lo Vencido */
+.cobro-fecha--urgente, .cobro-monto--urgente {
+    color: #ef4444 !important; /* Rojo vibrante */
+    display: flex;
+    align-items: center;
+}
+
+/* Naranja para Hoy/Mañana */
+.cobro-fecha--alerta, .cobro-monto--alerta {
+    color: #f59e0b !important; /* Naranja */
+    display: flex;
+    align-items: center;
+}
+
+/* Blanco para el futuro */
+.cobro-fecha--normal, .cobro-monto--normal {
+    color: var(--texto-principal) !important;
+    display: flex;
+    align-items: center;
 }
 
 /* Responsive */
@@ -411,6 +443,8 @@ body {
     gap: 6px;
   }
 }
+
+
 /*--------------------------------- SIDEBAR -------------------------------------------*/
 /*--------------------------------- SIDEBAR -------------------------------------------*/
 
@@ -795,9 +829,9 @@ margin-bottom: 15px;
 
 /* Colores de Podio para los Avatares */
 /* (Puedes definir estas variables de color oro/plata/bronce en tu :root) */
-.top-item:nth-child(1) .top-avatar { background: var(--color-primario); color: var(--texto-principal); } 
-.top-item:nth-child(2) .top-avatar { background: var(--color-primario); color: var(--texto-principal); } 
-.top-item:nth-child(3) .top-avatar { background: var(--color-primario); color: var(--texto-principal); } 
+.top-item:nth-child(1) .top-avatar { background: var(--color-primario); color: #fff; } 
+.top-item:nth-child(2) .top-avatar { background: var(--color-primario); color: #fff; } 
+.top-item:nth-child(3) .top-avatar { background: var(--color-primario); color: #fff; } 
 
 /* Montos con el color primario de tu app */
 .top-item:nth-child(1) .top-monto,

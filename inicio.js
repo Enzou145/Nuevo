@@ -148,7 +148,7 @@ async function cargarGraficoClientes() {
                 }]
             },
             options: {
-                cutout: '75%',
+                cutout: '70%',
                 plugins: { legend: { display: false } },
                 responsive: true,
                 maintainAspectRatio: false
@@ -231,35 +231,52 @@ async function cargarProximosCobros() {
         // 2. Ordenar: Primero los vencidos (negativos), luego los de hoy (0), luego los más cercanos
         cobrosProcesados.sort((a, b) => a.diasFaltantes - b.diasFaltantes);
 
-        // 3. Renderizar los primeros 5 o todos los urgentes
+        // 3. Renderizar
         cobrosProcesados.forEach(c => {
             let textoFecha = "";
             let esUrgente = false;
+            let esAlerta = false;
+            let esNormal = false;
 
             if (c.diasFaltantes < 0 || c.estadoOriginal.toLowerCase().includes("atrasado")) {
-                textoFecha = "⚠️ Vencido";
+                textoFecha = "Vencido"; // Quitamos el emoji para usar el SVG
                 esUrgente = true;
             } else if (c.diasFaltantes === 0) {
                 textoFecha = "Vence hoy";
-                esUrgente = false; 
+                esAlerta = true;
             } else if (c.diasFaltantes === 1) {
                 textoFecha = "Vence mañana";
+                esAlerta = true;
             } else {
                 textoFecha = `Vence en ${c.diasFaltantes} días`;
+                esNormal = true;
             }
 
+            // SVG del Reloj (Se pintará rojo o naranja según la clase)
+            const iconoReloj = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+
+            // SVG del Calendario (Se pintará blanco)
+            const iconoCalendario = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+
             const li = document.createElement('li');
-            li.className = `cobro-item ${esUrgente ? 'cobro-item--urgente' : ''}`;
+            li.className = `cobro-item ${esUrgente ? 'cobro-item--urgente' : ''} ${esAlerta ? 'cobro-item--alerta' : ''} ${esNormal ? 'cobro-item--normal' : ''}`;
+            
             li.innerHTML = `
                 <div class="cobro-info">
                     <span class="cobro-nombre">${c.nombre}</span>
-                    <span class="cobro-fecha ${esUrgente ? 'cobro-fecha--urgente' : ''}">${textoFecha}</span>
+                    <span class="cobro-fecha ${esUrgente ? 'cobro-fecha--urgente' : ''} ${esAlerta ? 'cobro-fecha--alerta' : ''} ${esNormal ? 'cobro-fecha--normal' : ''}">
+                        ${(esUrgente || esAlerta) ? iconoReloj : ''} 
+                        ${esNormal ? iconoCalendario : ''} 
+                        ${textoFecha}
+                    </span>
                 </div>
-                <span class="cobro-monto ${esUrgente ? 'cobro-monto--urgente' : ''}">${formatearMoneda(c.monto)}</span>
+                <span class="cobro-monto ${esUrgente ? 'cobro-monto--urgente' : ''} ${esAlerta ? 'cobro-monto--alerta' : ''} ${esNormal ? 'cobro-monto--normal' : ''}">
+                    ${formatearMoneda(c.monto)}
+                </span>
             `;
             listaContenedor.appendChild(li);
         });
-
+                        
     } catch (err) {
         console.error("Error en proximos cobros:", err);
     }
