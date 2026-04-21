@@ -206,7 +206,7 @@ body {
 
 /* Violeta */
 .card--violeta .card-label, .card--violeta svg { color: var(--texto-secundario); }
-.card--violeta .card-valor { color: #8b5cf6; }
+.card--violeta .card-valor { color: var(--color-primario) }
 
 /* Verde */
 .card--verde .card-label, .card--verde svg { color: var(--texto-secundario); }
@@ -836,12 +836,12 @@ margin-bottom: 15px;
     /* 2. Cards de Capital en 2 Columnas (Estilo Imagen) */
     .cards {
         grid-template-columns: repeat(2, 1fr); 
-        gap: 12px; /* Un poco más de espacio entre cards */
+        gap: 10px; /* Un poco más de espacio entre cards */
         padding: 10px 16px;
     }
 
     .card {
-        padding: 10px 12px; /* Más aire arriba/abajo */
+        padding: 5px 13px 15px 13px; /* Más aire arriba/abajo */
         border-radius: 10;
         border: 1px solid var(--borde-suave);
     }
@@ -871,6 +871,9 @@ margin-bottom: 15px;
         justify-content: center;
 
     }
+
+    .card-torta{
+    margin-top: 5px;}
 
     /* 3. Ajuste de Card Torta (Gráfico Izquierda, Leyenda Derecha) */
     .torta-contenido {
@@ -906,7 +909,7 @@ margin-bottom: 15px;
 
     /* 4. Ajustes en Card Cobros y Top Clientes */
     .card-cobros, .card-topc {
-        margin: 10px 16px;
+        margin: 15px 16px;
         padding: 12px;
     }
 
