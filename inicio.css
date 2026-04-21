@@ -202,7 +202,7 @@ body {
 /* Violeta */
 .card--violeta .card-icon { background-color: var(--card-violeta-bg); }
 .card--violeta .card-icon svg { fill: var(--card-violeta-txt); }
-.card--violeta .card-valor { color: var(--card-violeta-txt); }
+.card--violeta .card-valor { color: var(--card-azul-txt); }
 
 /* Verde */
 .card--verde .card-icon { background-color: var(--card-verde-bg); }
@@ -236,9 +236,11 @@ body {
 }
 
 .torta-contenido {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+    display: flex;
+    flex-direction: row; /* Asegura que estén uno al lado del otro */
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
 }
 
 .torta-grafico {
@@ -840,25 +842,36 @@ margin-bottom: 15px;
         font-size: 1rem; /* Ajuste de tamaño de moneda */
     }
 
-    /* 3. Ajuste de Card Torta (Gráfico arriba, leyenda abajo) */
+    /* 3. Ajuste de Card Torta (Gráfico Izquierda, Leyenda Derecha) */
     .torta-contenido {
-        flex-direction: column; /* Stack vertical */
-        gap: 20px;
+        flex-direction: row; /* Cambiado de column a row */
+        justify-content: space-between;
+        gap: 10px; /* Espacio reducido para que quepa en 360px */
     }
 
     .torta-grafico {
-        width: 150px;
-        height: 150px;
+        width: 130px; /* Reducido un poco para dar espacio a la derecha */
+        height: 130px;
+        flex-shrink: 0; /* Evita que el gráfico se aplaste */
     }
 
     .torta-leyenda {
-        grid-template-columns: 1fr 1fr; /* Leyenda en 2 columnas también */
+        display: flex;
+        flex-direction: column; /* Los items uno debajo de otro */
+        grid-template-columns: none; /* Quitamos el grid anterior si existía */
         width: 100%;
-        gap: 10px;
+        gap: 8px;
+        margin-left: 30px;
     }
 
     .leyenda-item {
-        min-width: unset;
+        font-size: 11px; /* Texto pequeño para que no desborde */
+        gap: 6px;
+    }
+
+    .leyenda-color {
+        width: 10px;
+        height: 10px;
     }
 
     /* 4. Ajustes en Card Cobros y Top Clientes */
@@ -890,7 +903,8 @@ margin-bottom: 15px;
     }
 
     .titulo-seccion h1 {
-        font-size: 18px;
+        font-size: 20px;
+        color: var(--color-primario);
     }
 
     /* 6. Sidebar (Ajuste de ancho para móviles angostos) */
@@ -908,3 +922,11 @@ margin-bottom: 15px;
         font-size: 0.9rem;
     }
 }
+
+
+
+
+
+
+
+
