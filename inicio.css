@@ -18,6 +18,7 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 0; /* Evita que el contenido desborde el flex */
+
 }
 
 
@@ -141,22 +142,24 @@ body {
 
 
 /* --------------------- CARDS --------------------------*/
+/* Ajustes generales para coincidir con la imagen */
 .cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Más responsivo */
-    gap: 16px;
-    padding: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    padding: 24px;
 }
 
 .card {
-    background-color: var(--fondo-tarjeta);
-    border: 1px solid var(--borde-suave);
-    border-radius: 12px;
-    padding: 16px;
+    background-color: var(--fondo-tarjeta); /* Color gris suave de fondo de la imagen */
+    border-radius: 10px;       /* Bordes bien redondos como en la imagen */
+    padding: 10px;
+    border: none;              /* Quitamos el borde para usar solo sombra suave */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    box-shadow: var(--sombra-tarjeta);
+    gap: 12px;
+    transition: transform 0.2s;
 }
 
 .card-top {
@@ -166,14 +169,14 @@ body {
 }
 
 .card-label {
-    font-size: 0.85rem;
-    color: var(--texto-principal);
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #64748b; /* Color gris del texto secundario */
 }
 
 .card-icon {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 22px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -186,33 +189,40 @@ body {
 }
 
 .card-valor {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--texto-principal); /* Por defecto usa el color de texto del tema */
+    font-size: 2rem; /* Tamaño grande para el monto */
+    font-weight: 800;
+    margin-top: 5px;
 }
 
 /* Modificadores Dinámicos */
 
-/* Azul */
-.card--azul .card-icon { background-color: var(--card-azul-bg); }
-.card--azul .card-icon svg { fill: var(--card-azul-txt); }
-.card--azul .card-valor { color: var(--card-azul-txt); }
+/* Azul / Violeta fuerte */
+.card--azul .card-label, .card--azul svg { color: var(--texto-secundario); }
+.card--azul .card-valor { color: #3b82f6; }
+
+/* Naranja / Amarillo */
+.card--amarillo .card-label, .card--amarillo svg { color:var(--texto-secundario); }
+.card--amarillo .card-valor { color: #10b981; }
 
 /* Violeta */
-.card--violeta .card-icon { background-color: var(--card-violeta-bg); }
-.card--violeta .card-icon svg { fill: var(--card-violeta-txt); }
-.card--violeta .card-valor { color: var(--card-azul-txt); }
+.card--violeta .card-label, .card--violeta svg { color: var(--texto-secundario); }
+.card--violeta .card-valor { color: #8b5cf6; }
 
 /* Verde */
-.card--verde .card-icon { background-color: var(--card-verde-bg); }
-.card--verde .card-icon svg { fill: var(--card-verde-txt); }
-.card--verde .card-valor { color: var(--card-verde-txt); }
+.card--verde .card-label, .card--verde svg { color: var(--texto-secundario); }
+.card--verde .card-valor { color: #f59e0b; }
 
-/* Amarillo */
-.card--amarillo .card-icon { background-color: var(--card-amarillo-bg); }
-.card--amarillo .card-icon svg { fill: var(--card-amarillo-txt); }
-.card--amarillo .card-valor { color: var(--card-amarillo-txt); }
+/* Ajuste para que el icono no tenga fondo cuadrado, sino que sea simple */
+.card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+}
 
 
 
@@ -823,25 +833,43 @@ margin-bottom: 15px;
         padding-bottom: 30px; /* Espacio extra al final */
     }
 
-    /* 2. Cards de Capital en 2 Columnas */
+    /* 2. Cards de Capital en 2 Columnas (Estilo Imagen) */
     .cards {
-        grid-template-columns: repeat(2, 1fr); /* Fuerza las 2 columnas */
-        gap: 10px;
-        padding: 12px 16px;
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 12px; /* Un poco más de espacio entre cards */
+        padding: 10px 16px;
     }
 
     .card {
-        padding: 12px;
-        gap: 6px;
+        padding: 10px 12px; /* Más aire arriba/abajo */
+        border-radius: 10;
+        border: 1px solid var(--borde-suave);
     }
 
+
+    .card-icon svg {
+        width: 18px; /* Iconos más pequeños para móvil */
+        height: 18px;
+        padding: 0;
+    }
+
+
+
     .card-label {
-        font-size: 11px; /* Texto más pequeño para que no rompa */
-        font-weight: 700;
+        font-size: 12px; /* Tamaño reducido para evitar saltos de línea */
+        white-space: nowrap; /* Fuerza a que el título esté en una línea */
+        letter-spacing: -0.2px;
+        color: var(--texto-principal) !important;
+        font-weight: 400;
     }
 
     .card-valor {
-        font-size: 1rem; /* Ajuste de tamaño de moneda */
+        font-size: 1.15rem; /* Tamaño destacado pero controlado */
+        font-weight: 800;
+        margin-top: 2px;
+        display: flex;
+        justify-content: center;
+
     }
 
     /* 3. Ajuste de Card Torta (Gráfico Izquierda, Leyenda Derecha) */

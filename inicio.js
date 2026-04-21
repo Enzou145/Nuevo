@@ -1,6 +1,6 @@
 // inicio.js
 
-const CAPITAL_TOTAL_FIJO = 8000000;
+const CAPITAL_TOTAL_FIJO = 1000000;
 
 const formatearMoneda = (valor) => {
     return new Intl.NumberFormat('es-AR', {
@@ -21,41 +21,60 @@ async function cargarResumenCapital() {
         
         if (!userId) return;
 
+        // Traemos todos los préstamos para los cálculos históricos
         const { data: prestamos, error } = await supabaseClient
             .from('prestamos')
             .select('monto_prestado, total_devolver, cuotas_pagadas, valor_cuota, estado_prestamo')
-            .eq('user_id', userId)
-            .neq('estado_prestamo', 'finalizado');
+            .eq('user_id', userId);
 
         if (error) throw error;
 
-        let totalMontoPrestado = 0; 
-        let totalAdeuda = 0;        
+        let totalMontoPrestadoHistorico = 0; // Se seguirá sumando siempre
+        let totalRecaudadoHistorico = 0;    // Dinero que ya entró a la caja
+        let totalAdeudaActual = 0;          // Solo lo que falta cobrar de préstamos activos
 
         prestamos.forEach(p => {
-            totalMontoPrestado += Number(p.monto_prestado) || 0;
-            const totalDevolver = Number(p.total_devolver) || 0;
-            const cuotasPagadas = Number(p.cuotas_pagadas) || 0;
+            const monto = Number(p.monto_prestado) || 0;
             const valorCuota = Number(p.valor_cuota) || 0;
-            const pagado = cuotasPagadas * valorCuota;
-            const adeuda = totalDevolver - pagado;
-            if (adeuda > 0) totalAdeuda += adeuda;
+            const cuotasPagadas = Number(p.cuotas_pagadas) || 0;
+            const totalDevolver = Number(p.total_devolver) || 0;
+
+            const recaudado = cuotasPagadas * valorCuota;
+            
+            // 1. Acumulamos TODO lo prestado (no baja a 0 aunque terminen)
+            totalMontoPrestadoHistorico += monto;
+            
+            // 2. Acumulamos TODO lo cobrado (para la caja)
+            totalRecaudadoHistorico += recaudado;
+
+            // 3. Calculamos lo que falta cobrar (solo de los que no han terminado)
+            if (p.estado_prestamo !== 'finalizado') {
+                const adeuda = totalDevolver - recaudado;
+                if (adeuda > 0) totalAdeudaActual += adeuda;
+            }
         });
 
-        const capitalDisponible = CAPITAL_TOTAL_FIJO - totalMontoPrestado;
+        // LÓGICA DE CAJA: Dinero disponible = Inicial - Todo lo que salió + Todo lo que entró
+        const capitalTotalActual = CAPITAL_TOTAL_FIJO - totalMontoPrestadoHistorico + totalRecaudadoHistorico;
 
-        // --- LAS ANIMACIONES CON TUS DATOS REALES ---
-        // Usamos los IDs del HTML y las variables calculadas arriba
+        // --- ANIMACIONES ---
+        
+        // Tarjeta 1: Capital Inicial (El millón fijo)
         animarContador('total-fijo', CAPITAL_TOTAL_FIJO);
-        animarContador('total-disponible', capitalDisponible);
-        animarContador('total-prestado', totalMontoPrestado);
-        animarContador('total-recuperar', totalAdeuda);
+        
+        // Tarjeta 2: Capital Total (Dinero real en mano hoy)
+        animarContador('total-disponible', capitalTotalActual);
+        
+        // Tarjeta 3: Capital Prestado (Historial acumulado, NO vuelve a 0)
+        animarContador('total-prestado', totalMontoPrestadoHistorico);
+        
+        // Tarjeta 4: A Recuperar (Solo lo que te deben hoy)
+        animarContador('total-recuperar', totalAdeudaActual);
 
     } catch (err) {
         console.error("Error en resumen:", err.message);
     }
 }
-
 
 
 // ------------- FUNCIÓN 2: GRÁFICO DE TORTA --------------------
@@ -468,22 +487,7 @@ function animarContador(id, valorFinal, duracion = 1500) {
     actualizar();
 }
 
-// ESTO SE EJECUTA CUANDO CARGA LA PÁGINA
-document.addEventListener('DOMContentLoaded', () => {
-    // Aquí defines los valores finales (pueden venir de una API o variables)
-    const montos = {
-        fijo: 8000000,
-        disponible: 3500000,
-        prestado: 4500000,
-        recuperar: 5850000
-    };
 
-    // Lanzar las animaciones
-    animarContador('total-fijo', montos.fijo);
-    animarContador('total-disponible', montos.disponible);
-    animarContador('total-prestado', montos.prestado);
-    animarContador('total-recuperar', montos.recuperar);
-});
 
 
 

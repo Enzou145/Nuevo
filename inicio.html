@@ -103,28 +103,51 @@
     <main class="main-content">
 
         <!-- CARDS CAPITAL ACTUALIZADOS CON IDS -->
-        <section class="cards">
-            <article class="card card--azul">
-                <span class="card-label">Capital Total</span>
-                <p class="card-valor" id="total-fijo">$ 0</p> 
-            </article>
+<section class="cards">
+    <!-- Capital Inicial -->
+    <article class="card card--azul">
+        <div class="card-header">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+            </div>
+            <span class="card-label">Capital Inicial</span>
+        </div>
+        <p class="card-valor" id="total-fijo">$ 0</p>
+    </article>
 
-            <article class="card card--amarillo">
-                <span class="card-label">Capital Disponible</span>
-                <p class="card-valor" id="total-disponible">$ 0</p>
-            </article>
+    <!-- Capital Total -->
+    <article class="card card--amarillo">
+        <div class="card-header">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2h0V5z"/><path d="M7 11h.01"/><path d="M11 11h.01"/></svg>
+            </div>
+            <span class="card-label">Capital Total</span>
+        </div>
+        <p class="card-valor" id="total-disponible">$ 0</p>
+    </article>
 
-            <article class="card card--violeta">
-                <span class="card-label">Capital Prestado</span>
-                <p class="card-valor" id="total-prestado">$ 0</p>
-            </article>
+    <!-- Capital Prestado -->
+    <article class="card card--violeta">
+        <div class="card-header">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.8-2.8L13 15"/><circle cx="14" cy="8" r="2"/></svg>
+            </div>
+            <span class="card-label">Capital Prestado</span>
+        </div>
+        <p class="card-valor" id="total-prestado">$ 0</p>
+    </article>
 
-            <article class="card card--verde">
-                <span class="card-label">A Recuperar</span>
-                <p class="card-valor" id="total-recuperar">$ 0</p>
-            </article>
-        </section>
-
+    <!-- A Recuperar -->
+    <article class="card card--verde">
+        <div class="card-header">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            </div>
+            <span class="card-label">A Recuperar</span>
+        </div>
+        <p class="card-valor" id="total-recuperar">$ 0</p>
+    </article>
+</section>
     <!-- ----------------------- CARD TORTA ----------------------- -->
         <section class="card-torta">
             <h2 class="torta-titulo">Estado de Clientes</h2>
