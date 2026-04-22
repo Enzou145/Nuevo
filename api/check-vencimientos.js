@@ -39,10 +39,17 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           app_id: "69853c34-00e4-46ca-9d17-ef926cf8660f",
           included_segments: ["Total Subscriptions"],
-          headings: { "es": "⚠️ Cobros Vencidos" },
-          contents: { "es": `Hoy vencen cuotas de: ${vencidosHoy.join(', ')}` }
+          // Agregamos "en" para que OneSignal no de error
+          headings: { 
+            "en": "⚠️ Cobros Vencidos",
+            "es": "⚠️ Cobros Vencidos" 
+          },
+          contents: { 
+            "en": `Hoy vencen cuotas de: ${vencidosHoy.join(', ')}`,
+            "es": `Hoy vencen cuotas de: ${vencidosHoy.join(', ')}` 
+          }
         })
-      });
+    });
 
       const oneSignalData = await response.json();
       
