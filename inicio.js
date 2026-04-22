@@ -166,6 +166,8 @@ async function cargarGraficoClientes() {
 
 // ------------- FUNCIÓN 3: PROXIMOS COBROS --------------------
 // ------------- FUNCIÓN 3: PROXIMOS COBROS --------------------
+let todosLosCobros = []; // Variable global para guardar los datos
+
 async function cargarProximosCobros() {
     try {
         const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado"));
@@ -190,19 +192,14 @@ async function cargarProximosCobros() {
 
         if (error) throw error;
 
-        const listaContenedor = document.getElementById('lista-cobros');
-        listaContenedor.innerHTML = "";
-
-        // 1. Mapear y calcular datos de cada préstamo
-        const cobrosProcesados = prestamos.map(p => {
+        // 1. Mapear y calcular datos
+        todosLosCobros = prestamos.map(p => {
             const cuotaSiguiente = (p.cuotas_pagadas || 0) + 1;
             const intervalo = p.intervalo_pago || 1;
             const frecuencia = (p.frecuencia_pago || "diario").toLowerCase();
             
-            // Calculamos la fecha de la próxima cuota
-            // Fecha Inicio + (Nro Cuota * Intervalo * Dias de Frecuencia)
             let fechaVencimiento = new Date(p.fecha_inicio);
-            fechaVencimiento.setMinutes(fechaVencimiento.getMinutes() + fechaVencimiento.getTimezoneOffset()); // Ajuste zona horaria
+            fechaVencimiento.setMinutes(fechaVencimiento.getMinutes() + fechaVencimiento.getTimezoneOffset());
 
             if (frecuencia.includes("diario")) {
                 fechaVencimiento.setDate(fechaVencimiento.getDate() + (cuotaSiguiente * intervalo));
@@ -212,7 +209,6 @@ async function cargarProximosCobros() {
                 fechaVencimiento.setMonth(fechaVencimiento.getMonth() + (cuotaSiguiente * intervalo));
             }
 
-            // Comparar con hoy
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
             fechaVencimiento.setHours(0, 0, 0, 0);
@@ -222,65 +218,106 @@ async function cargarProximosCobros() {
 
             return {
                 nombre: `${p.clientes.nombre} ${p.clientes.apellido}`,
-                monto: p.valor_cuota,
+                monto: Math.round(p.valor_cuota), // Redondeo aplicado
                 diasFaltantes: diffDias,
                 estadoOriginal: p.estado_prestamo
             };
         });
 
-        // 2. Ordenar: Primero los vencidos (negativos), luego los de hoy (0), luego los más cercanos
-        cobrosProcesados.sort((a, b) => a.diasFaltantes - b.diasFaltantes);
+        // 2. Ordenar
+        todosLosCobros.sort((a, b) => a.diasFaltantes - b.diasFaltantes);
 
-        // 3. Renderizar
-        cobrosProcesados.forEach(c => {
-            let textoFecha = "";
-            let esUrgente = false;
-            let esAlerta = false;
-            let esNormal = false;
 
-            if (c.diasFaltantes < 0 || c.estadoOriginal.toLowerCase().includes("atrasado")) {
-                textoFecha = "Vencido"; // Quitamos el emoji para usar el SVG
-                esUrgente = true;
-            } else if (c.diasFaltantes === 0) {
-                textoFecha = "Vence hoy";
-                esAlerta = true;
-            } else if (c.diasFaltantes === 1) {
-                textoFecha = "Vence mañana";
-                esAlerta = true;
+
+         let estaExpandido = false; // Estado del botón
+        // Iconos SVG
+        const iconoAbajo = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+        const iconoArriba = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>`;
+
+        // 3. Renderizar los primeros 5 inicialmente
+        renderizarListaCobros(todosLosCobros.slice(0, 5));
+
+        // 4. Configurar el botón "Ver todos"
+        const btnVerTodos = document.getElementById('btn-ver-todos-cobros');
+        if (btnVerTodos) {
+            // Solo mostramos el botón si hay más de 5 elementos
+            if (todosLosCobros.length > 5) {
+                btnVerTodos.style.display = 'flex';
+                btnVerTodos.innerHTML = `Ver todos ${iconoAbajo}`;
+                
+                btnVerTodos.onclick = () => {
+                    estaExpandido = !estaExpandido; // Cambiamos el estado
+                    
+                    if (estaExpandido) {
+                        renderizarListaCobros(todosLosCobros);
+                        btnVerTodos.innerHTML = `Ver menos ${iconoArriba}`;
+                    } else {
+                        renderizarListaCobros(todosLosCobros.slice(0, 5));
+                        btnVerTodos.innerHTML = `Ver todos ${iconoAbajo}`;
+                    }
+                };
             } else {
-                textoFecha = `Vence en ${c.diasFaltantes} días`;
-                esNormal = true;
+                btnVerTodos.style.display = 'none';
             }
-
-            // SVG del Reloj (Se pintará rojo o naranja según la clase)
-            const iconoReloj = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
-
-            // SVG del Calendario (Se pintará blanco)
-            const iconoCalendario = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
-
-            const li = document.createElement('li');
-            li.className = `cobro-item ${esUrgente ? 'cobro-item--urgente' : ''} ${esAlerta ? 'cobro-item--alerta' : ''} ${esNormal ? 'cobro-item--normal' : ''}`;
-            
-            li.innerHTML = `
-                <div class="cobro-info">
-                    <span class="cobro-nombre">${c.nombre}</span>
-                    <span class="cobro-fecha ${esUrgente ? 'cobro-fecha--urgente' : ''} ${esAlerta ? 'cobro-fecha--alerta' : ''} ${esNormal ? 'cobro-fecha--normal' : ''}">
-                        ${(esUrgente || esAlerta) ? iconoReloj : ''} 
-                        ${esNormal ? iconoCalendario : ''} 
-                        ${textoFecha}
-                    </span>
-                </div>
-                <span class="cobro-monto ${esUrgente ? 'cobro-monto--urgente' : ''} ${esAlerta ? 'cobro-monto--alerta' : ''} ${esNormal ? 'cobro-monto--normal' : ''}">
-                    ${formatearMoneda(c.monto)}
-                </span>
-            `;
-            listaContenedor.appendChild(li);
-        });
-                        
+        }      
+                          
     } catch (err) {
         console.error("Error en proximos cobros:", err);
     }
 }
+
+
+// Nueva función auxiliar para renderizar
+function renderizarListaCobros(lista) {
+    const listaContenedor = document.getElementById('lista-cobros');
+    listaContenedor.innerHTML = "";
+
+    lista.forEach(c => {
+        let textoFecha = "";
+        let esUrgente = false;
+        let esAlerta = false;
+        let esNormal = false;
+
+        if (c.diasFaltantes < 0 || c.estadoOriginal.toLowerCase().includes("atrasado")) {
+            textoFecha = "Vencido";
+            esUrgente = true;
+        } else if (c.diasFaltantes === 0) {
+            textoFecha = "Vence hoy";
+            esAlerta = true;
+        } else if (c.diasFaltantes === 1) {
+            textoFecha = "Vence mañana";
+            esAlerta = true;
+        } else {
+            textoFecha = `Vence en ${c.diasFaltantes} días`;
+            esNormal = true;
+        }
+
+        const iconoReloj = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+        const iconoCalendario = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+
+        const li = document.createElement('li');
+        li.className = `cobro-item ${esUrgente ? 'cobro-item--urgente' : ''} ${esAlerta ? 'cobro-item--alerta' : ''} ${esNormal ? 'cobro-item--normal' : ''}`;
+        
+        li.innerHTML = `
+            <div class="cobro-info">
+                <span class="cobro-nombre">${c.nombre}</span>
+                <span class="cobro-fecha ${esUrgente ? 'cobro-fecha--urgente' : ''} ${esAlerta ? 'cobro-fecha--alerta' : ''} ${esNormal ? 'cobro-fecha--normal' : ''}">
+                    ${(esUrgente || esAlerta) ? iconoReloj : ''} 
+                    ${esNormal ? iconoCalendario : ''} 
+                    ${textoFecha}
+                </span>
+            </div>
+            <span class="cobro-monto ${esUrgente ? 'cobro-monto--urgente' : ''} ${esAlerta ? 'cobro-monto--alerta' : ''} ${esNormal ? 'cobro-monto--normal' : ''}">
+                ${formatearMoneda(c.monto)}
+            </span>
+        `;
+        listaContenedor.appendChild(li);
+    });
+}
+
+
+
+
 
 
 
@@ -355,7 +392,7 @@ async function cargarTopClientes() {
             `;
             listaContenedor.appendChild(li);
         });
-        
+
         if (topArray.length === 0) {
             listaContenedor.innerHTML = `<p style="color:gray; font-size:12px; text-align:center; padding: 20px;">No hay préstamos activos</p>`;
         }

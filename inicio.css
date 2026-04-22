@@ -31,7 +31,7 @@ body {
     /* Colores Principales */
     --color-primario: #4c46e0;     /* Violeta del botón "Agregar Cliente" */
     --color-primario-hover: #3f39c5;
-    --texto-principal: #1f2937;    /* Gris casi negro para títulos */
+    --texto-principal: #2a3544;    /* Gris casi negro para títulos */
     --texto-secundario: #64748b;   /* Gris medio para "10 clientes" o "Adeuda" */
     
     /* Bordes y Sombras */
@@ -314,7 +314,7 @@ body {
 
 .leyenda-nombre {   
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--texto-secundario);
 
 }
@@ -340,9 +340,8 @@ body {
 
 .cobros-titulo {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--texto-principal);
-  margin: 0 0 12px 0;
 }
 
 /* Lista */
@@ -442,6 +441,49 @@ body {
     align-items: flex-start;
     gap: 6px;
   }
+}
+
+
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.btn-ver-todos {
+    background: none;
+    border: none;
+    color: #6366f1; /* Color de tu marca */
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-ver-todos:hover {
+    color: #4f46e5;
+}
+
+.btn-ver-todos {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: #6366f1;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.btn-ver-todos svg {
+    transition: transform 0.3s ease;
 }
 
 

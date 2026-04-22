@@ -12,7 +12,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Aldrich&family=Alumni+Sans+Pinstripe:ital@0;1&family=Anton&family=Bebas+Neue&family=Bruno+Ace+SC&family=Electrolize&family=Fjalla+One&family=Gemunu+Libre:wght@200..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Madimi+One&family=Michroma&family=Monoton&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rajdhani:wght@300;400;500;600;700&family=Teko:wght@300..700&family=Tomorrow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Zen+Kurenaido&display=swap');
     </style>
-    
+
     <link rel="stylesheet" href="inicio.css">
 
 </head>
@@ -191,12 +191,15 @@
         </section>
 
     <!-------------- CARD PRÓXIMOS COBROS ------------------>
-        <section class="card-cobros">
+    <section class="card-cobros">
+        <div class="card-header-flex">
             <h2 class="cobros-titulo">Próximos a Cobrar</h2>
-            <ul class="cobros-lista" id="lista-cobros">
-                <!-- Los items se cargarán dinámicamente -->
-            </ul>
-        </section>
+            <button id="btn-ver-todos-cobros" class="btn-ver-todos">Ver todos</button>
+        </div>
+        <ul class="cobros-lista" id="lista-cobros">
+            <!-- Los items se cargarán dinámicamente -->
+        </ul>
+    </section>
 
 
     <!-- CARD TOP CLIENTES -->
