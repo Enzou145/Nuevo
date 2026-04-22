@@ -3,7 +3,8 @@
     padding: 0;
     box-sizing: border-box;
     /* Aplicar la fuente a TODO el documento */
-    font-family: 'Poppins', sans-serif;}
+    font-family: "Inter" , sans-serif;
+}
 
 
 body {
@@ -23,7 +24,7 @@ body {
 /* TEMA CLARO (Basado exactamente en la imagen) */
 :root {
     /* Colores de Fondo */
-    --fondo-app: #eef2f5;          /* Gris azulado muy claro del fondo */
+    --fondo-app: #f6f7f9;          /* Gris azulado muy claro del fondo */
     --fondo-tarjeta: #ffffff;      /* Blanco para las tarjetas */
     --fondo-input: #e2e8f0;        /* Gris de la barra de búsqueda */
 
@@ -34,7 +35,7 @@ body {
     --texto-secundario: #64748b;   /* Gris medio para "10 clientes" o "Adeuda" */
     
     /* Bordes y Sombras */
-    --borde-suave: #dfe6f0;
+    --borde-suave: #f0f0f0;
     --sombra-tarjeta: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 
     /* Estados (Badges de la imagen) */
@@ -81,7 +82,7 @@ body {
 
     --card-borde: rgba(0, 0, 0, 0.05);
 
-    --card-inicio: rgba(0, 0, 0, 0.03);}
+    --card-inicio: #f9f9f9;  }
 
 
 /* TEMA OSCURO (Adaptación profesional) */
@@ -360,14 +361,13 @@ body {
   align-items: center;
   justify-content: space-between;
   background: var(--card-inicio);
-  border: 1px solid var(--card-borde);
   border-radius: 10px;
   padding: 10px 12px;
 }
 
 /* Estado Urgente */
 .cobro-item--urgente {
-  border-left: 2px solid #d33939; /* Nueva variable para bordes de error */
+  border-left: 3px solid #d33939; /* Nueva variable para bordes de error */
 }
 
 /* Info izquierda */
@@ -401,7 +401,7 @@ body {
 
 /* Estado de Alerta (Hoy y Mañana) */
 .cobro-item--alerta {
-    border-left: 2px solid #f59e0b; /* Borde naranja */
+    border-left: 3px solid #f59e0b; /* Borde naranja */
 }
 
 
@@ -412,7 +412,7 @@ body {
 
 /* Estado Normal (Más de 2 días) */
 .cobro-item--normal {
-    border-left: 2px solid var(--texto-principal); /* Borde blanco como pediste */
+    border-left: 3px solid #3b82f6; /* Borde blanco como pediste */
 }
 
 
@@ -432,7 +432,6 @@ body {
 
 /* Blanco para el futuro */
 .cobro-fecha--normal, .cobro-monto--normal {
-    color: var(--texto-principal) !important;
     display: flex;
     align-items: center;
 }
@@ -801,7 +800,6 @@ margin-bottom: 15px;
     justify-content: space-between;
     padding: 10px 12px;
     background: var(--card-inicio);
-    border: 1px solid var(--card-borde);
     border-radius: 10px;
     transition: transform 0.2s;
 }
@@ -853,7 +851,32 @@ margin-bottom: 15px;
     white-space: nowrap;
 }
 
+/* Contenedor para nombre y ranking */
+.top-detalles {
+    display: flex;
+    flex-direction: column; /* Apila el texto verticalmente */
+    gap: 4px;
+}
 
+.top-nombre {
+    font-size: 13px;
+    font-weight: 600; /* Un poco más de peso */
+    color: var(--texto-principal);
+    line-height: 1.2;
+}
+
+.top-rank {
+    font-size: 10px; /* Tamaño chiquito como pediste */
+    color: #94a3b8; /* Un gris suave (o usa var(--texto-secundario)) */
+    font-weight: 500;
+}
+
+/* Ajuste opcional para centrar el avatar con el bloque de texto */
+.top-perfil {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
 
 
@@ -956,7 +979,9 @@ margin-bottom: 15px;
     }
 
     .cobro-item, .top-item {
-        padding: 8px 10px;
+        padding: 15px 10px;
+        display: flex;
+        align-items: center;
     }
 
     .cobro-nombre, .top-nombre {
@@ -965,11 +990,19 @@ margin-bottom: 15px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-weight: 700;
+        font-weight: 600;
     }
 
-    .cobro-monto, .top-monto {
-        font-size: 13px;
+    .cobro-info{
+    margin-left: 6px;
+    display: flex;
+    gap: 8px;}
+
+    .cobro-monto {
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        font-weight: 800;
     }
 
     /* 5. Topbar móvil */
