@@ -549,7 +549,7 @@ async function cargarTopClientes() {
 
 
 // Función para animar los números
-function animarContador(id, valorFinal, duracion = 1500) {
+function animarContador(id, valorFinal, duracion = 1000) {
     const elemento = document.getElementById(id);
     if (!elemento) return;
 
@@ -583,6 +583,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. DISPARO ÚNICO DE LA APP
     inicializarApp();
 
+        // --- FORMATEO DINÁMICO DEL INPUT DE CAPITAL ---
+    const inputCapitalValor = document.getElementById('input-capital-valor');
+
+    if (inputCapitalValor) {
+        inputCapitalValor.addEventListener('input', (e) => {
+            // 1. Obtener solo los números
+            let valor = e.target.value.replace(/\D/g, "");
+            
+            // 2. Formatear con puntos de miles (es-AR usa el punto)
+            if (valor) {
+                valor = parseInt(valor).toLocaleString('es-AR');
+                e.target.value = valor;
+            } else {
+                e.target.value = "";
+            }
+        });
+    }
+
     // 2. LÓGICA DEL MODAL DE CAPITAL
     const cardCapitalFijo = document.getElementById('card-capital-fijo');
     const modalCapital = document.getElementById('modal-capital');
@@ -591,7 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(cardCapitalFijo) {
         cardCapitalFijo.onclick = () => {
-            document.getElementById('input-capital-valor').value = CAPITAL_TOTAL_DINAMICO;
+            // Al abrir, ya lo mostramos formateado
+            document.getElementById('input-capital-valor').value = CAPITAL_TOTAL_DINAMICO.toLocaleString('es-AR');
             modalCapital.style.display = 'flex';
         };
     }
@@ -601,10 +620,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if(formCapital) {
         formCapital.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const nuevoMonto = Number(document.getElementById('input-capital-valor').value);
-            const sesion = JSON.parse(localStorage.getItem("usuarioLogueado"));
             
-            // CORRECCIÓN AQUÍ: Usamos el ID correcto para el update
+            // LIMPIEZA CLAVE: Quitamos los puntos antes de convertir a número
+            const valorConPuntos = document.getElementById('input-capital-valor').value;
+            const nuevoMonto = Number(valorConPuntos.replace(/\./g, '')); 
+
+            const sesion = JSON.parse(localStorage.getItem("usuarioLogueado"));
             const authId = sesion?.auth_user_id || sesion?.user?.id || sesion?.id;
 
             const { error } = await supabaseClient
@@ -614,15 +635,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!error) {
                 CAPITAL_TOTAL_DINAMICO = nuevoMonto;
+                localStorage.setItem("capitalInicial", nuevoMonto); // Sincronizamos local
+                
                 modalCapital.style.display = 'none';
                 document.querySelector('.card-capital')?.classList.remove('highlight-pulse');
+                
+                // Abrir el siguiente paso si es onboarding
+                const modalGuia = document.getElementById("modal-guia-clientes");
+                if (modalGuia && localStorage.getItem("onboardingCompleto") !== "true") {
+                    modalGuia.style.display = "flex";
+                }
+
                 cargarResumenCapital(); 
             } else {
                 alert("Error al actualizar: " + error.message);
             }
         });
     }
-
     // 3. MENÚ HAMBURGUESA
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
