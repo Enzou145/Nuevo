@@ -694,20 +694,22 @@ function formatearMonto(numero) {
 }
 
 // ===============================
-// INICIO (CONTROL ONBOARDING)
+// INICIO (CONTROL ONBOARDING) - CORREGIDO
 // ===============================
 window.addEventListener("load", function () {
     const capitalGuardado = localStorage.getItem("capitalInicial");
+    const onboardingCompleto = localStorage.getItem("onboardingCompleto");
 
-    if (capitalGuardado && parseInt(capitalGuardado, 10) > 0) {
-        // Ya tiene capital → NO mostrar onboarding
+    // SI ya completó el onboarding O tiene capital > 0, NO mostrar modal
+    if (onboardingCompleto === "true" || (capitalGuardado && parseInt(capitalGuardado, 10) > 0)) {
         modalBienvenida.style.display = "none";
-
-        const numero = parseInt(capitalGuardado, 10);
-        document.getElementById("total-fijo").textContent = formatearMonto(numero);
-
+        
+        if (capitalGuardado) {
+            const numero = parseInt(capitalGuardado, 10);
+            document.getElementById("total-fijo").textContent = formatearMonto(numero);
+        }
     } else {
-        // No tiene capital → mostrar onboarding
+        // Solo mostrar si es realmente la primera vez y no hay capital
         modalBienvenida.style.display = "flex";
     }
 });
@@ -734,37 +736,38 @@ cardCapital.addEventListener("click", function () {
 document.getElementById("form-capital").addEventListener("submit", function (e) {
     e.preventDefault();
 
-    let numero = parseInt(inputCapital.value.replace(/\./g, ""), 10) || 0;
+    let numero = parseInt(inputCapital.value, 10) || 0;
 
+    // guardar correctamente
     localStorage.setItem("capitalInicial", numero);
+    localStorage.setItem("onboardingCompleto", "true");
 
+    // actualizar UI
     document.getElementById("total-fijo").textContent = formatearMonto(numero);
 
+    // cerrar modal
     modalCapital.style.display = "none";
+
+    // abrir guía
     modalGuia.style.display = "flex";
 });
 
-
 // ===============================
-// PASO 4 → IR A CLIENTES
+// PASO 4 → FINALIZAR (CORREGIDO)
 // ===============================
 document.getElementById("btn-ir-clientes").addEventListener("click", function () {
-    modalGuia.style.display = "none";
+    // 1. Guardamos la bandera para que no se vuelva a abrir
+    localStorage.setItem("onboardingCompleto", "true");
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-
-inputCapital.addEventListener("input", function (e) {
-    let valor = e.target.value.replace(/\D/g, ""); // solo números
-
-    if (valor === "") {
-        e.target.value = "";
-        return;
+    // 2. Cerramos el modal correcto (modal-guia-clientes)
+    const modalGuia = document.getElementById("modal-guia-clientes"); 
+    if (modalGuia) {
+        modalGuia.style.display = "none";
     }
 
-    let numero = parseInt(valor, 10);
-
-    // formatear con puntos
-    e.target.value = numero.toLocaleString("es-AR");
+    // 3. Por seguridad, ocultamos también el primero si estuviera abierto
+    const modalBienvenida = document.getElementById("modal-bienvenida");
+    if (modalBienvenida) {
+        modalBienvenida.style.display = "none";
+    }
 });
