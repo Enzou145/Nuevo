@@ -697,20 +697,17 @@ function formatearMonto(numero) {
 // INICIO (CONTROL ONBOARDING)
 // ===============================
 window.addEventListener("load", function () {
-    const onboardingCompleto = localStorage.getItem("onboardingCompleto");
     const capitalGuardado = localStorage.getItem("capitalInicial");
 
-    if (onboardingCompleto === "true") {
-        // NO mostrar onboarding
+    if (capitalGuardado && parseInt(capitalGuardado, 10) > 0) {
+        // Ya tiene capital → NO mostrar onboarding
         modalBienvenida.style.display = "none";
 
-        // mostrar capital si existe
-        if (capitalGuardado) {
-            const numero = parseInt(capitalGuardado, 10);
-            document.getElementById("total-fijo").textContent = formatearMonto(numero);
-        }
+        const numero = parseInt(capitalGuardado, 10);
+        document.getElementById("total-fijo").textContent = formatearMonto(numero);
+
     } else {
-        // mostrar onboarding
+        // No tiene capital → mostrar onboarding
         modalBienvenida.style.display = "flex";
     }
 });
