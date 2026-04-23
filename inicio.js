@@ -734,25 +734,37 @@ cardCapital.addEventListener("click", function () {
 document.getElementById("form-capital").addEventListener("submit", function (e) {
     e.preventDefault();
 
-    let numero = parseInt(inputCapital.value, 10) || 0;
+    let numero = parseInt(inputCapital.value.replace(/\./g, ""), 10) || 0;
 
-    // guardar correctamente
     localStorage.setItem("capitalInicial", numero);
-    localStorage.setItem("onboardingCompleto", "true");
 
-    // actualizar UI
     document.getElementById("total-fijo").textContent = formatearMonto(numero);
 
-    // cerrar modal
     modalCapital.style.display = "none";
-
-    // abrir guía
     modalGuia.style.display = "flex";
 });
+
 
 // ===============================
 // PASO 4 → IR A CLIENTES
 // ===============================
 document.getElementById("btn-ir-clientes").addEventListener("click", function () {
-    window.location.href = "clientesyprestamos.html";
+    modalGuia.style.display = "none";
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+
+inputCapital.addEventListener("input", function (e) {
+    let valor = e.target.value.replace(/\D/g, ""); // solo números
+
+    if (valor === "") {
+        e.target.value = "";
+        return;
+    }
+
+    let numero = parseInt(valor, 10);
+
+    // formatear con puntos
+    e.target.value = numero.toLocaleString("es-AR");
 });

@@ -360,6 +360,17 @@ color: var(--texto-secundario);
 
 text-align: center;}
 
+.capitalinicia {
+    margin-top: 1px;
+    margin-bottom: 30px;
+color: var(--texto-principal);
+font-size: 12px;
+font-family: "Poppins";
+color: var(--texto-secundario);
+font-weight: 300;
+}
+
+
 .input-group label{
     margin-top: 20px;
 color: var(--texto-principal);
