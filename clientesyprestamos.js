@@ -418,26 +418,32 @@ async function ejecutarGuardado(abrirPrestamo = false) {
     }
 
     try {
-        const { data, error } = await supabaseClient
-            .from('clientes')
-            .insert([datosCliente])
-            .select();
+    // Usamos el operador spread (...) para traer los datos del formulario
+    // y le agregamos el user_id del prestamista actual
+    const { data, error } = await supabaseClient
+        .from('clientes')
+        .insert([{ 
+            ...datosCliente, 
+            user_id: usuarioLogueado.auth_user_id 
+        }])
+        .select();
 
-        if (error) throw error;
+    if (error) throw error;
 
-        alert("✅ Cliente guardado correctamente");
-        
-        // Limpiar inputs
-        const inputs = document.querySelectorAll('#modalNuevoCliente input');
-        inputs.forEach(input => input.value = '');
+    alert("✅ Cliente guardado correctamente");
+    
+    // Limpiar inputs
+    const inputs = document.querySelectorAll('#modalNuevoCliente input');
+    inputs.forEach(input => input.value = '');
 
-        cerrarModalNuevo(); // Asegúrate que esta función oculte el modal
-        await cargarClientesDB();
+    cerrarModalNuevo(); 
+    await cargarClientesDB();
 
-        if (abrirPrestamo && data) {
-            prepararOtorgar(data[0]);
-        }
+    if (abrirPrestamo && data) {
+        prepararOtorgar(data[0]);
+    }
     } catch (err) {
+        console.error("Error completo:", err);
         alert("Error: " + err.message);
     }
 }
@@ -563,7 +569,7 @@ document.querySelector('.btn-confirmar-final').onclick = async () => {
         .from('prestamos')
         .update({
         cuotas_pagadas: nuevasPagadas,
-        estado_prestamo: nuevasPagadas >= prestamo.cuotas_totales  ? 'finalizado'  : 'al dia'        })
+        estado_prestamo: nuevasPagadas >= prestamo.cuotas_totales  ? 'finalizado'  : 'activo'        })
         .eq('id', prestamo.id);
 
     if (errorPrestamo) {
@@ -1092,23 +1098,36 @@ function aplicarFiltros() {
    ========================================== */
 document.addEventListener('DOMContentLoaded', () => {
     cargarClientesDB();
+    inicializarIdentidad(); // <--- Llamamos a la nueva función
 
+    // Lógica del Modal de Logout (Igual a Inicio)
+    const btnLogout = document.getElementById('btn-logout');
+    const modalLogout = document.getElementById('modal-logout');
+    const btnConfirmarLogout = document.getElementById('btn-confirmar-logout');
+    const btnCancelarLogout = document.getElementById('btn-cancelar-logout');
 
-      // === AGREGA ESTO DESDE AQUÍ ===
-    if (usuarioLogueado && usuarioLogueado.nombre) {
-        const displayNombre = document.getElementById('sidebar-user-name');
-        const displayAvatar = document.getElementById('user-avatar-initial');
-
-        if (displayNombre) {
-            displayNombre.innerText = usuarioLogueado.nombre;
-        }
-        if (displayAvatar) {
-            // Usamos tu función obtenerIniciales que ya tienes en el JS
-            displayAvatar.innerText = obtenerIniciales(usuarioLogueado.nombre);
-        }
+    if (btnLogout) {
+        btnLogout.onclick = (e) => {
+            e.preventDefault();
+            modalLogout.style.display = 'flex';
+        };
     }
-    // === HASTA AQUÍ ===
 
+    if (btnCancelarLogout) {
+        btnCancelarLogout.onclick = () => modalLogout.style.display = 'none';
+    }
+
+    if (btnConfirmarLogout) {
+        btnConfirmarLogout.onclick = () => {
+            localStorage.removeItem("usuarioLogueado");
+            window.location.href = "index.html";
+        };
+    }
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = (event) => {
+        if (event.target == modalLogout) modalLogout.style.display = 'none';
+    };
 
 
     document.getElementById('btnAnterior').onclick = () => {
@@ -1129,70 +1148,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// FUNCIÓN PARA CERRAR SESIÓN
-async function cerrarSesion() {
+
+// 1. Nueva función para inicializar la identidad del usuario
+async function inicializarIdentidad() {
     try {
-        // 1. Cerramos sesión en el servidor de Supabase
-        await supabaseClient.auth.signOut();
+        const authId = usuarioLogueado?.auth_user_id || usuarioLogueado?.id;
         
-        // 2. Limpiamos TODA la basura del navegador
-        localStorage.clear();
-        sessionStorage.clear();
+        // Buscamos el nombre real en la tabla usuarios
+        const { data, error } = await supabaseClient
+            .from('usuarios')
+            .select('nombre_prestamista')
+            .eq('auth_user_id', authId)
+            .single();
 
-        // 3. Redirigimos al login con un parámetro para evitar el auto-login
-        // Usamos replace para que no pueda volver atrás con el botón del celular
-        window.location.replace('index.html?logout=true'); 
-    } catch (error) {
-        console.error("Error al salir:", error);
-        window.location.href = 'index.html?logout=true';
-    }
-}
-
-// 4. Vinculamos la función al botón del Sidebar
-// Busca el ID de tu botón de logout, por ejemplo 'btn-logout'
-const btnLogout = document.getElementById('btn-logout');
-
-if (btnLogout) {
-    btnLogout.addEventListener('click', (e) => {
-        e.preventDefault(); // Evita que el enlace recargue la página
-        cerrarSesion();
-    });
-}
-
-
-
-
-
-
-// Función para forzar la actualización del nombre en el sidebar
-function actualizarNombreRealSidebar() {
-    // Buscamos el usuario en el storage (probamos con varias llaves comunes)
-    const data = localStorage.getItem('usuarioLogueado') || localStorage.getItem('usuario') || localStorage.getItem('user');
-    
-    if (data) {
-        try {
-            const user = JSON.parse(data);
-            // Buscamos el nombre (probamos .nombre, .name o .username)
-            const nombreParaMostrar = user.nombre || user.name || user.username || "Usuario";
+        if (data) {
+            const nombreCompleto = data.nombre_prestamista || "Usuario";
             
+            // Actualizamos Sidebar
             const elNombre = document.getElementById('sidebar-user-name');
             const elAvatar = document.getElementById('user-avatar-initial');
 
-            if (elNombre) elNombre.innerText = nombreParaMostrar;
-            
-            if (elAvatar) {
-                // Si tienes la función de iniciales la usamos, si no, la primera letra
-                elAvatar.innerText = (typeof obtenerIniciales === 'function') 
-                    ? obtenerIniciales(nombreParaMostrar) 
-                    : nombreParaMostrar.charAt(0).toUpperCase();
-            }
-        } catch (e) {
-            console.error("Error al parsear el usuario:", e);
+            if (elNombre) elNombre.innerText = nombreCompleto;
+            if (elAvatar) elAvatar.innerText = obtenerIniciales(nombreCompleto);
         }
+    } catch (e) {
+        console.error("Error al cargar identidad:", e);
     }
 }
 
-// Lo ejecutamos cuando cargue el DOM
-document.addEventListener('DOMContentLoaded', actualizarNombreRealSidebar);
-// Y lo ejecutamos una vez más por si acaso el DOM ya estaba listo
-actualizarNombreRealSidebar();

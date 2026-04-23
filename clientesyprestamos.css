@@ -2758,8 +2758,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         flex: 1;
         height: 40px;
         font-size: 13px;
-        border-radius: 12px;
-
     }
 
 
@@ -2769,8 +2767,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
    ============================================= */
 
 #modalEliminar .modal-container {
-    background: #12121a !important; /* Fondo ultra oscuro */
-    border: 1px solid #23232e;
+    background: var(--fondo-tarjeta); /* Fondo ultra oscuro */
+    border: 1px solid var(--borde-suave);
     max-width: 380px !important;
     padding: 35px 25px !important;
     text-align: center;
@@ -2797,15 +2795,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 #modalEliminar h2 {
-    color: #ffffff !important;
-    font-size: 22px;
+    color: var(--texto-principal) !important;
+    font-size: 20px;
     font-weight: 800;
     margin-bottom: 12px;
 }
 
 #modalEliminar p {
     color: #94a3b8 !important; /* Gris suave */
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.5;
     margin-bottom: 25px;
 }
@@ -2823,26 +2821,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .modal-acciones-v2 .btn-secundario-v2 {
-    background: #1c1c27 !important;
-    color: #ffffff !important;
-    border: 1px solid #23232e !important;
-    height: 50px !important;
-    border-radius: 14px !important;
-    font-weight: 700;
-    font-size: 14px;
+    flex: 1;
+    background: var(--otros-fondo);
+    border: none;
+    border-radius: 8px;
+    color: var(--texto-principal);
+    cursor: pointer;
+    font-weight: 600;
 }
 
-.modal-acciones-v2 .btn-principal-v2 {
-    background: #ef4444 !important; /* Rojo */
-    color: #ffffff !important;
-    border: none !important;
-    height: 50px !important;
-    border-radius: 14px !important;
-    font-weight: 700;
-    font-size: 14px;
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
-    transition: transform 0.2s;
-    justify-content: center;
+.modal-acciones-v2 .btn-principal-v22 {
+    flex: 1;
+    background: #ef4444;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    text-align: c;
 }
 
 .modal-acciones-v2 .btn-principal-v2:hover {
@@ -2972,3 +2968,94 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .seccion-titulo svg{
     color: var(--color-primario);
 }
+
+
+
+
+
+
+
+/* Estilos específicos para el modal de Logout */
+
+.modal-containerrrr {
+    background-color: var(--fondo-tarjeta);
+    padding: 1.5rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: aparecer 0.3s ease-out;}
+
+.modal-contentt {
+    background-color: var(--fondo-tarjeta);
+    padding: 1.5rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: aparecer 0.3s ease-out;}
+
+
+.modal-contentt p {
+    margin-top: 1px;
+    margin-bottom: 30px;
+    color: var(--texto-principal);
+    font-size: 12.5px;
+    font-family: "Poppins";
+    color: var(--texto-secundario);
+    text-align: center;
+}
+
+
+.modal-containerrr, h2{
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 20px;
+    color: var(--texto-principal);
+}
+
+.icon-warning {
+    background: var(--peligro-fondo);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+}
+
+.modal-acciones {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.btn-secundario {
+    flex: 1;
+    padding: 12px;
+    background: var(--otros-fondo);
+    border: none;
+    border-radius: 8px;
+    color: var(--texto-principal);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-peligro {
+    flex: 1;
+    padding: 12px;
+    background: #ef4444;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-peligro:hover {
+    background: #dc2626;
+}
+

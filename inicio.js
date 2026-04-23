@@ -1,6 +1,7 @@
-// inicio.js
-
-const CAPITAL_TOTAL_FIJO = 1000000;
+// 1. VARIABLE GLOBAL Y UTILIDADES
+let CAPITAL_TOTAL_DINAMICO = 0;
+let nombreCompletoUsuario = "Usuario"; // Agrega esta
+let primerNombreUsuario = "Usuario";
 
 const formatearMoneda = (valor) => {
     return new Intl.NumberFormat('es-AR', {
@@ -10,10 +11,261 @@ const formatearMoneda = (valor) => {
     }).format(valor);
 };
 
+// 2. INICIALIZACIÓN (EL MOTOR DE LA APP)
 
 
-// ------------------- FUNCIÓN 1: RESUMEN DE CAPITAL -------------------
-// ------------------- FUNCIÓN 1: RESUMEN DE CAPITAL -------------------
+async function inicializarApp() {
+    try {
+        const sesion = localStorage.getItem("usuarioLogueado");
+        if (!sesion) {
+            window.location.href = "index.html";
+            return;
+        }
+
+        const usuarioLogueado = JSON.parse(sesion);
+        
+        // CORRECCIÓN CLAVE: Usamos la misma lógica que en tus funciones de cobros
+        // Intentamos obtener el ID de autenticación de todas las formas posibles
+        const authId = usuarioLogueado?.auth_user_id || usuarioLogueado?.user?.id || usuarioLogueado?.id; 
+
+        if (!authId) {
+            console.error("No se encontró el ID del usuario en la sesión");
+            return;
+        }
+
+        // Consultamos el perfil del prestamista
+        const { data, error } = await supabaseClient
+            .from('usuarios')
+            .select('capital_inicial, nombre_prestamista')
+            .eq('auth_user_id', authId)
+            .single();
+
+        if (error) {
+            console.error("Error al obtener datos del perfil:", error.message);
+            ejecutarCargasDashboard(); // Intentamos cargar el resto igual
+            return;
+        }
+
+        if (data) {
+            // 1. Actualizamos variables globales
+            nombreCompletoUsuario = data.nombre_prestamista || "Usuario";
+            primerNombreUsuario = nombreCompletoUsuario.split(' ')[0];
+            CAPITAL_TOTAL_DINAMICO = Number(data.capital_inicial) || 0;
+
+            // 2. ACTUALIZAMOS EL HTML (Topbar y Sidebar)
+            const greetingEl = document.getElementById('user-greeting');
+            if (greetingEl) {
+                greetingEl.innerHTML = `${obtenerSaludoSegunHora()}, <strong>${primerNombreUsuario}</strong>`;
+            }
+
+            const sidebarNameEl = document.getElementById('sidebar-user-name');
+            if (sidebarNameEl) {
+                sidebarNameEl.innerText = nombreCompletoUsuario;
+            }
+
+            const avatarEl = document.getElementById('user-avatar-initial');
+            if (avatarEl) {
+                avatarEl.innerText = primerNombreUsuario.charAt(0).toUpperCase();
+            }
+
+            // 3. Modal de bienvenida (Si el capital es 0)
+            if (CAPITAL_TOTAL_DINAMICO === 0) {
+                mostrarBienvenida(nombreCompletoUsuario);
+            }
+        }
+
+        // Una vez tenemos el nombre y capital, disparamos el resto del dashboard
+        ejecutarCargasDashboard();
+
+    } catch (err) {
+        console.error("Error crítico en inicialización:", err);
+    }
+}
+
+
+// Función para agrupar las cargas y no repetir código
+function ejecutarCargasDashboard() {
+    cargarResumenCapital(); 
+    cargarGraficoClientes();
+    cargarProximosCobros();
+    cargarTopClientes();
+}
+
+
+
+//  ------- MODAL DE VIENBENIDA POR PRIMERA VEZ -----------
+//  ------- MODAL DE VIENBENIDA POR PRIMERA VEZ -----------
+
+function mostrarBienvenida(nombre) {
+    const modal = document.getElementById('modal-bienvenida');
+    const btn = document.getElementById('btn-comenzar-onboarding');
+    const titulo = document.getElementById('titulo-bienvenida');
+    
+    const primerNombre = nombre.split(' ')[0];
+    titulo.innerText = `¡Bienvenido, ${primerNombre}!`;
+    
+    modal.style.display = 'flex';
+
+    btn.onclick = () => {
+        modal.style.display = 'none';
+        
+        // 2. HACER QUE LA TARJETA RESALTE
+        const cardCapital = document.querySelector('.card-capital'); // Asegúrate que tu card tenga esta clase
+        if (cardCapital) {
+            cardCapital.classList.add('highlight-pulse');
+            
+            // Opcional: El pulso se quita cuando el usuario hace clic en la tarjeta
+            cardCapital.addEventListener('click', () => {
+                cardCapital.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Añade esto
+                cardCapital.classList.remove('highlight-pulse');
+            }, { once: true });
+        }
+    };
+}
+
+
+
+// --- ÚNICA FUNCIÓN PARA COBROS (UNIFICADA) ---
+async function cargarProximosCobros() {
+    try {
+        const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado"));
+        const userId = usuarioLogueado?.auth_user_id || usuarioLogueado?.id;
+        if (!userId) return;
+
+        // 1. Traemos los préstamos activos
+        const { data: prestamos, error } = await supabaseClient
+            .from('prestamos')
+            .select(`
+                valor_cuota, 
+                estado_prestamo, 
+                fecha_inicio, 
+                cuotas_pagadas, 
+                intervalo_pago,
+                frecuencia_pago,
+                clientes (nombre, apellido)
+            `)
+            .eq('user_id', userId)
+            .neq('estado_prestamo', 'finalizado');
+
+        if (error) throw error;
+
+        const msgContenedor = document.getElementById('mensaje-asistente-cobros');
+        
+        // --- CASO SIN PRÉSTAMOS ---
+        if (!prestamos || prestamos.length === 0) {
+            if (msgContenedor) {
+                msgContenedor.innerHTML = `Hola <strong>${primerNombreUsuario}</strong>, ¡Registra un préstamo para empezar!`;
+            }
+            document.getElementById('lista-cobros').innerHTML = `<p style="color:gray; font-size:12px; text-align:center; padding: 20px;">No hay préstamos activos</p>`;
+            return;
+        }
+
+        let hoyContador = 0;
+        let vencidosContador = 0;
+        const fechaHoy = new Date();
+        fechaHoy.setHours(0, 0, 0, 0);
+
+        // 2. Calculamos fechas y llenamos la lista
+        todosLosCobros = prestamos.map(p => {
+            const cuotaSiguiente = (p.cuotas_pagadas || 0) + 1;
+            const intervalo = p.intervalo_pago || 1;
+            const frecuencia = (p.frecuencia_pago || "diario").toLowerCase();
+            
+            let fechaVencimiento = new Date(p.fecha_inicio);
+            fechaVencimiento.setMinutes(fechaVencimiento.getMinutes() + fechaVencimiento.getTimezoneOffset());
+
+            if (frecuencia.includes("diario")) {
+                fechaVencimiento.setDate(fechaVencimiento.getDate() + (cuotaSiguiente * intervalo));
+            } else if (frecuencia.includes("semanal")) {
+                fechaVencimiento.setDate(fechaVencimiento.getDate() + (cuotaSiguiente * intervalo * 7));
+            } else if (frecuencia.includes("mensual")) {
+                fechaVencimiento.setMonth(fechaVencimiento.getMonth() + (cuotaSiguiente * intervalo));
+            }
+
+            fechaVencimiento.setHours(0, 0, 0, 0);
+            const diffTiempo = fechaVencimiento - fechaHoy;
+            const diffDias = Math.round(diffTiempo / (1000 * 60 * 60 * 24));
+
+            // Contamos para el asistente
+            if (diffDias < 0) vencidosContador++;
+            else if (diffDias === 0) hoyContador++;
+
+            return {
+                nombre: `${p.clientes.nombre} ${p.clientes.apellido}`,
+                monto: Math.round(p.valor_cuota),
+                diasFaltantes: diffDias,
+                estadoOriginal: p.estado_prestamo
+            };
+        });
+
+        // 3. Ordenar por fecha
+        todosLosCobros.sort((a, b) => a.diasFaltantes - b.diasFaltantes);
+
+        // 4. ACTUALIZAR EL MENSAJE DEL ASISTENTE
+        if (msgContenedor) {
+            let mensaje = "";
+            if (vencidosContador > 0 && hoyContador > 0) {
+                mensaje = `Hola <strong>${primerNombreUsuario}</strong>, tienes <span class="urgente">${vencidosContador} atrasados</span> y <span class="hoy">${hoyContador} para hoy</span>.`;
+            } else if (vencidosContador > 0) {
+                mensaje = `Atención <strong>${primerNombreUsuario}</strong>, tienes <span class="urgente">${vencidosContador} cobros vencidos</span>.`;
+            } else if (hoyContador > 0) {
+                mensaje = `¡Hola <strong>${primerNombreUsuario}</strong>! Tienes <span class="hoy">${hoyContador} cobros para hoy</span>.`;
+            } else {
+                mensaje = `Todo al día, <strong>${primerNombreUsuario}</strong>. No hay cobros urgentes hoy.`;
+            }
+            msgContenedor.innerHTML = mensaje;
+        }
+
+        // 5. Renderizar lista inicial (primeros 5)
+        renderizarListaCobros(todosLosCobros.slice(0, 5));
+
+        // 6. Configurar botón "Ver todos"
+        configurarBotonVerTodos();
+
+    } catch (err) {
+        console.error("Error en proximos cobros:", err);
+    }
+}
+
+// Función auxiliar para el botón (puedes ponerla debajo)
+function configurarBotonVerTodos() {
+    const btnVerTodos = document.getElementById('btn-ver-todos-cobros');
+    if (!btnVerTodos) return;
+    
+    if (todosLosCobros.length > 5) {
+        btnVerTodos.style.display = 'block';
+        btnVerTodos.onclick = () => {
+            const estaExpandido = btnVerTodos.innerText.includes("menos");
+            if (estaExpandido) {
+                renderizarListaCobros(todosLosCobros.slice(0, 5));
+                btnVerTodos.innerText = "Ver todos";
+            } else {
+                renderizarListaCobros(todosLosCobros);
+                btnVerTodos.innerText = "Ver menos";
+            }
+        };
+    } else {
+        btnVerTodos.style.display = 'none';
+    }
+}
+
+
+
+// Función auxiliar para que el saludo cambie solo
+function obtenerSaludoSegunHora() {
+    const hora = new Date().getHours();
+    if (hora >= 5 && hora < 12) return "¡Buen día";
+    if (hora >= 12 && hora < 19) return "¡Buenas tardes";
+    return "¡Buenas noches";
+}
+
+
+
+
+
+
+
+// 3. RESUMEN DE CAPITAL (DINÁMICO)
 async function cargarResumenCapital() {
     try {
         const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado"));
@@ -21,7 +273,6 @@ async function cargarResumenCapital() {
         
         if (!userId) return;
 
-        // Traemos todos los préstamos para los cálculos históricos
         const { data: prestamos, error } = await supabaseClient
             .from('prestamos')
             .select('monto_prestado, total_devolver, cuotas_pagadas, valor_cuota, estado_prestamo')
@@ -29,9 +280,9 @@ async function cargarResumenCapital() {
 
         if (error) throw error;
 
-        let totalMontoPrestadoHistorico = 0; // Se seguirá sumando siempre
-        let totalRecaudadoHistorico = 0;    // Dinero que ya entró a la caja
-        let totalAdeudaActual = 0;          // Solo lo que falta cobrar de préstamos activos
+        let totalMontoPrestadoHistorico = 0; 
+        let totalRecaudadoHistorico = 0;    
+        let totalAdeudaActual = 0;          
 
         prestamos.forEach(p => {
             const monto = Number(p.monto_prestado) || 0;
@@ -40,41 +291,32 @@ async function cargarResumenCapital() {
             const totalDevolver = Number(p.total_devolver) || 0;
 
             const recaudado = cuotasPagadas * valorCuota;
-            
-            // 1. Acumulamos TODO lo prestado (no baja a 0 aunque terminen)
             totalMontoPrestadoHistorico += monto;
-            
-            // 2. Acumulamos TODO lo cobrado (para la caja)
             totalRecaudadoHistorico += recaudado;
 
-            // 3. Calculamos lo que falta cobrar (solo de los que no han terminado)
             if (p.estado_prestamo !== 'finalizado') {
                 const adeuda = totalDevolver - recaudado;
                 if (adeuda > 0) totalAdeudaActual += adeuda;
             }
         });
 
-        // LÓGICA DE CAJA: Dinero disponible = Inicial - Todo lo que salió + Todo lo que entró
-        const capitalTotalActual = CAPITAL_TOTAL_FIJO - totalMontoPrestadoHistorico + totalRecaudadoHistorico;
+        // Fórmula: Capital en mano = (Lo que puse al inicio - Lo que salió en préstamos + Lo que ya cobré)
+        const capitalTotalActual = CAPITAL_TOTAL_DINAMICO - totalMontoPrestadoHistorico + totalRecaudadoHistorico;
 
-        // --- ANIMACIONES ---
-        
-        // Tarjeta 1: Capital Inicial (El millón fijo)
-        animarContador('total-fijo', CAPITAL_TOTAL_FIJO);
-        
-        // Tarjeta 2: Capital Total (Dinero real en mano hoy)
+        animarContador('total-fijo', CAPITAL_TOTAL_DINAMICO);
         animarContador('total-disponible', capitalTotalActual);
-        
-        // Tarjeta 3: Capital Prestado (Historial acumulado, NO vuelve a 0)
         animarContador('total-prestado', totalMontoPrestadoHistorico);
-        
-        // Tarjeta 4: A Recuperar (Solo lo que te deben hoy)
         animarContador('total-recuperar', totalAdeudaActual);
 
     } catch (err) {
         console.error("Error en resumen:", err.message);
     }
 }
+
+
+
+
+
 
 
 // ------------- FUNCIÓN 2: GRÁFICO DE TORTA --------------------
@@ -166,105 +408,7 @@ async function cargarGraficoClientes() {
 
 // ------------- FUNCIÓN 3: PROXIMOS COBROS --------------------
 // ------------- FUNCIÓN 3: PROXIMOS COBROS --------------------
-let todosLosCobros = []; // Variable global para guardar los datos
 
-async function cargarProximosCobros() {
-    try {
-        const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado"));
-        const userId = usuarioLogueado?.auth_user_id || usuarioLogueado?.id;
-
-        if (!userId) return;
-
-        const { data: prestamos, error } = await supabaseClient
-            .from('prestamos')
-            .select(`
-                valor_cuota, 
-                estado_prestamo, 
-                fecha_inicio, 
-                cuotas_pagadas, 
-                cuotas_totales,
-                intervalo_pago,
-                frecuencia_pago,
-                clientes (nombre, apellido)
-            `)
-            .eq('user_id', userId)
-            .neq('estado_prestamo', 'finalizado');
-
-        if (error) throw error;
-
-        // 1. Mapear y calcular datos
-        todosLosCobros = prestamos.map(p => {
-            const cuotaSiguiente = (p.cuotas_pagadas || 0) + 1;
-            const intervalo = p.intervalo_pago || 1;
-            const frecuencia = (p.frecuencia_pago || "diario").toLowerCase();
-            
-            let fechaVencimiento = new Date(p.fecha_inicio);
-            fechaVencimiento.setMinutes(fechaVencimiento.getMinutes() + fechaVencimiento.getTimezoneOffset());
-
-            if (frecuencia.includes("diario")) {
-                fechaVencimiento.setDate(fechaVencimiento.getDate() + (cuotaSiguiente * intervalo));
-            } else if (frecuencia.includes("semanal")) {
-                fechaVencimiento.setDate(fechaVencimiento.getDate() + (cuotaSiguiente * intervalo * 7));
-            } else if (frecuencia.includes("mensual")) {
-                fechaVencimiento.setMonth(fechaVencimiento.getMonth() + (cuotaSiguiente * intervalo));
-            }
-
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-            fechaVencimiento.setHours(0, 0, 0, 0);
-
-            const diffTiempo = fechaVencimiento - hoy;
-            const diffDias = Math.round(diffTiempo / (1000 * 60 * 60 * 24));
-
-            return {
-                nombre: `${p.clientes.nombre} ${p.clientes.apellido}`,
-                monto: Math.round(p.valor_cuota), // Redondeo aplicado
-                diasFaltantes: diffDias,
-                estadoOriginal: p.estado_prestamo
-            };
-        });
-
-        // 2. Ordenar
-        todosLosCobros.sort((a, b) => a.diasFaltantes - b.diasFaltantes);
-
-
-
-         let estaExpandido = false; // Estado del botón
-        // Iconos SVG
-        const iconoAbajo = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
-        const iconoArriba = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>`;
-
-        // 3. Renderizar los primeros 5 inicialmente
-        renderizarListaCobros(todosLosCobros.slice(0, 5));
-
-        // 4. Configurar el botón "Ver todos"
-        const btnVerTodos = document.getElementById('btn-ver-todos-cobros');
-        if (btnVerTodos) {
-            // Solo mostramos el botón si hay más de 5 elementos
-            if (todosLosCobros.length > 5) {
-                btnVerTodos.style.display = 'flex';
-                btnVerTodos.innerHTML = `Ver todos ${iconoAbajo}`;
-                
-                btnVerTodos.onclick = () => {
-                    estaExpandido = !estaExpandido; // Cambiamos el estado
-                    
-                    if (estaExpandido) {
-                        renderizarListaCobros(todosLosCobros);
-                        btnVerTodos.innerHTML = `Ver menos ${iconoArriba}`;
-                    } else {
-                        renderizarListaCobros(todosLosCobros.slice(0, 5));
-                        btnVerTodos.innerHTML = `Ver todos ${iconoAbajo}`;
-                    }
-                };
-            } else {
-                btnVerTodos.style.display = 'none';
-            }
-        }      
-                          
-    } catch (err) {
-        console.error("Error en proximos cobros:", err);
-    }
-}
 
 
 // Nueva función auxiliar para renderizar
@@ -311,13 +455,13 @@ function renderizarListaCobros(lista) {
                 ${formatearMoneda(c.monto)}
             </span>
         `;
+
+        
         listaContenedor.appendChild(li);
+
+        
     });
 }
-
-
-
-
 
 
 
@@ -404,116 +548,6 @@ async function cargarTopClientes() {
 
 
 
-
-
-//----------------------------- HAMBURGUESAAAA ----------------------------
-document.addEventListener('DOMContentLoaded', () => {
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-
-    // Función para abrir/cerrar
-    if (menuToggle && sidebar && overlay) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.add('open');
-            overlay.classList.add('active');
-        });
-
-        // Cerrar al hacer clic en la capa oscura
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-        });
-
-        // Opcional: Cerrar menú si se hace clic en un enlace (en móvil)
-        const menuLinks = document.querySelectorAll('.menu-item');
-        menuLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                if (window.innerWidth <= 1024) {
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('active');
-                }
-            });
-        });
-    }
-});
-
-
-
-// ------------------- LÓGICA DE CAMBIO DE TEMA -------------------
-// ------------------- LÓGICA DE CAMBIO DE TEMA -------------------
-document.addEventListener('DOMContentLoaded', () => {
-    const btnTema = document.getElementById('btn-tema');
-    const temaIcon = document.getElementById('tema-icon');
-    const body = document.body;
-
-    // 1. Revisar si ya existe un tema guardado en localStorage
-    const temaGuardado = localStorage.getItem('tema');
-    if (temaGuardado === 'oscuro') {
-        body.classList.add('tema-oscuro');
-        actualizarIcono(true);
-    }
-
-    // 2. Evento click para cambiar el tema
-    btnTema.addEventListener('click', () => {
-        const esOscuro = body.classList.toggle('tema-oscuro');
-        
-        // Guardar preferencia
-        localStorage.setItem('tema', esOscuro ? 'oscuro' : 'claro');
-        
-        // Actualizar icono
-        actualizarIcono(esOscuro);
-
-        // Opcional: Si el gráfico de Chart.js usa colores que cambian, 
-        // podrías necesitar recargarlo aquí:
-        cargarGraficoClientes(); 
-    });
-
-    function actualizarIcono(esOscuro) {
-        if (esOscuro) {
-            // Icono de Sol (para volver al claro)
-            temaIcon.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
-        } else {
-            // Icono de Luna (para volver al oscuro)
-            temaIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
-        }
-    }
-});
-
-
-
-
-// ----------- Función para animar los números ------------------
-// ----------- Función para animar los números ------------------
-function animarValor(id, valorFinal, duracion = 1500) {
-    const elemento = document.getElementById(id);
-    let inicio = 0;
-    const incremento = valorFinal / (duracion / 16); // 16ms es aprox 1 frame a 60fps
-
-    const actualizar = () => {
-        inicio += incremento;
-        if (inicio < valorFinal) {
-            // Formatear con puntos de miles mientras cuenta
-            elemento.textContent = Math.floor(inicio).toLocaleString('es-AR', {
-                style: 'currency',
-                currency: 'ARS',
-                maximumFractionDigits: 0
-            });
-            requestAnimationFrame(actualizar);
-        } else {
-            // Al terminar, poner el valor real exacto
-            elemento.textContent = valorFinal.toLocaleString('es-AR', {
-                style: 'currency',
-                currency: 'ARS',
-                maximumFractionDigits: 0
-            });
-        }
-    };
-
-    actualizar();
-}
-
-
 // Función para animar los números
 function animarContador(id, valorFinal, duracion = 1500) {
     const elemento = document.getElementById(id);
@@ -545,12 +579,183 @@ function animarContador(id, valorFinal, duracion = 1500) {
 
 
 
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
-    cargarResumenCapital();
-    cargarGraficoClientes();
-    cargarProximosCobros(); // <--- Agrega esta línea
-    cargarTopClientes();
+    // 1. DISPARO ÚNICO DE LA APP
+    inicializarApp();
+
+    // 2. LÓGICA DEL MODAL DE CAPITAL
+    const cardCapitalFijo = document.getElementById('card-capital-fijo');
+    const modalCapital = document.getElementById('modal-capital');
+    const formCapital = document.getElementById('form-capital');
+    const btnCerrarModal = document.getElementById('close-capital');
+
+    if(cardCapitalFijo) {
+        cardCapitalFijo.onclick = () => {
+            document.getElementById('input-capital-valor').value = CAPITAL_TOTAL_DINAMICO;
+            modalCapital.style.display = 'flex';
+        };
+    }
+
+    if(btnCerrarModal) btnCerrarModal.onclick = () => modalCapital.style.display = 'none';
+
+    if(formCapital) {
+        formCapital.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nuevoMonto = Number(document.getElementById('input-capital-valor').value);
+            const sesion = JSON.parse(localStorage.getItem("usuarioLogueado"));
+            
+            // CORRECCIÓN AQUÍ: Usamos el ID correcto para el update
+            const authId = sesion?.auth_user_id || sesion?.user?.id || sesion?.id;
+
+            const { error } = await supabaseClient
+                .from('usuarios')
+                .update({ capital_inicial: nuevoMonto })
+                .eq('auth_user_id', authId); 
+
+            if (!error) {
+                CAPITAL_TOTAL_DINAMICO = nuevoMonto;
+                modalCapital.style.display = 'none';
+                document.querySelector('.card-capital')?.classList.remove('highlight-pulse');
+                cargarResumenCapital(); 
+            } else {
+                alert("Error al actualizar: " + error.message);
+            }
+        });
+    }
+
+    // 3. MENÚ HAMBURGUESA
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (menuToggle && sidebar && overlay) {
+        menuToggle.onclick = () => {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        };
+        overlay.onclick = () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        };
+    }
+
+    // 4. CAMBIO DE TEMA
+    const btnTema = document.getElementById('btn-tema');
+    if (btnTema) {
+        // Cargar tema guardado
+        if (localStorage.getItem('tema') === 'oscuro') document.body.classList.add('tema-oscuro');
+        
+        btnTema.onclick = () => {
+            const esOscuro = document.body.classList.toggle('tema-oscuro');
+            localStorage.setItem('tema', esOscuro ? 'oscuro' : 'claro');
+            cargarGraficoClientes(); // Recargar gráfico por los colores
+        };
+    }
+
+    // 5. CIERRE DE SESIÓN
+    const btnLogout = document.getElementById('btn-logout');
+    const modalLogout = document.getElementById('modal-logout');
+    const btnConfirmarLogout = document.getElementById('btn-confirmar-logout');
+    const btnCancelarLogout = document.getElementById('btn-cancelar-logout');
+
+    if (btnCancelarLogout) {
+        btnCancelarLogout.onclick = () => {
+            modalLogout.style.display = 'none';
+        };
+    }
+
+    if (btnLogout) btnLogout.onclick = () => modalLogout.style.display = 'flex';
+    if (btnConfirmarLogout) {
+        btnConfirmarLogout.onclick = () => {
+            localStorage.removeItem("usuarioLogueado");
+            window.location.href = "index.html";
+        };
+    }
+});
+
+
+
+
+
+// ===============================
+// REFERENCIAS
+// ===============================
+const inputCapital = document.getElementById("input-capital-valor");
+const modalBienvenida = document.getElementById("modal-bienvenida");
+const modalCapital = document.getElementById("modal-capital");
+const modalGuia = document.getElementById("modal-guia-clientes");
+const cardCapital = document.getElementById("card-capital-fijo");
+
+// ===============================
+// FORMATEO DISPLAY
+// ===============================
+function formatearMonto(numero) {
+    return "$ " + numero.toLocaleString("es-AR");
+}
+
+// ===============================
+// INICIO (CONTROL ONBOARDING)
+// ===============================
+window.addEventListener("load", function () {
+    const onboardingCompleto = localStorage.getItem("onboardingCompleto");
+    const capitalGuardado = localStorage.getItem("capitalInicial");
+
+    if (onboardingCompleto === "true") {
+        // NO mostrar onboarding
+        modalBienvenida.style.display = "none";
+
+        // mostrar capital si existe
+        if (capitalGuardado) {
+            const numero = parseInt(capitalGuardado, 10);
+            document.getElementById("total-fijo").textContent = formatearMonto(numero);
+        }
+    } else {
+        // mostrar onboarding
+        modalBienvenida.style.display = "flex";
+    }
+});
+
+// ===============================
+// PASO 1 → CERRAR BIENVENIDA
+// ===============================
+document.getElementById("btn-comenzar-onboarding").addEventListener("click", function () {
+    modalBienvenida.style.display = "none";
+    cardCapital.classList.add("highlight");
+});
+
+// ===============================
+// PASO 2 → CLICK EN CARD
+// ===============================
+cardCapital.addEventListener("click", function () {
+    modalCapital.style.display = "flex";
+    cardCapital.classList.remove("highlight");
+});
+
+// ===============================
+// PASO 3 → GUARDAR CAPITAL
+// ===============================
+document.getElementById("form-capital").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    let numero = parseInt(inputCapital.value, 10) || 0;
+
+    // guardar correctamente
+    localStorage.setItem("capitalInicial", numero);
+    localStorage.setItem("onboardingCompleto", "true");
+
+    // actualizar UI
+    document.getElementById("total-fijo").textContent = formatearMonto(numero);
+
+    // cerrar modal
+    modalCapital.style.display = "none";
+
+    // abrir guía
+    modalGuia.style.display = "flex";
+});
+
+// ===============================
+// PASO 4 → IR A CLIENTES
+// ===============================
+document.getElementById("btn-ir-clientes").addEventListener("click", function () {
+    window.location.href = "clientesyprestamos.html";
 });

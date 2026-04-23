@@ -81,6 +81,25 @@
                 <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
             </div>
     </aside>        
+
+
+    <!-- Modal de Confirmación de Cierre de Sesión -->
+    <div id="modal-logout" class="modal">
+        <div class="modal-contentt">
+            <div class="modal-header-logout">
+                <div class="icon-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </div>
+                <h2>¿Cerrar sesión?</h2>
+            </div>
+            <p>Estás a punto de salir de tu cuenta. ¿Realmente quieres finalizar la sesión?</p>
+            <div class="modal-acciones">
+                <button id="btn-cancelar-logout" class="btn-secundario">Cancelar</button>
+                <button id="btn-confirmar-logout" class="btn-peligro">Sí, salir</button>
+            </div>
+        </div>
+    </div>
+
         
         <!-- SECCIÓN: CONTENIDO PRINCIPAL -->
         <main class="main-content">
@@ -164,48 +183,6 @@
                 <span id="textoTotal">0 CLIENTES</span>
             </div>
             
-
-            <!-- 3. TARJETAS DE RESUMEN (Estadísticas) 
-            <section class="resumen-grid">
-                <div class="card-resumen">
-                    <div class="icon-resumen total">
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    </div>
-                    <strong>10</strong>
-                    <span>Total</span>
-                </div>
-                <div class="card-resumen">
-                    <div class="icon-resumen atrasados">
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    </div>
-                    <strong>2</strong>
-                    <span>Atrasados</span>
-                </div>
-                <div class="card-resumen">
-                    <div class="icon-resumen vencer">
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    </div>
-                    <strong>2</strong>
-                    <span>Por vencer</span>
-                </div>
-                <div class="card-resumen">
-                    <div class="icon-resumen al-dia">
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </div>
-                    <strong>5</strong>
-                    <span>Al día</span>
-                </div>
-            </section>-->
-            <!-- 4. PILLS DE FILTROS 
-            <section class="contenedor-filtros-pills">
-                <div class="filtros-scroll">
-                    <button class="pill-filter active" data-estado="todos">Todos <span class="badge-pill">10</span></button>
-                    <button class="pill-filter" data-estado="atrasado"><span class="dot rojo"></span> Atrasados <span class="badge-pill">2</span></button>
-                    <button class="pill-filter" data-estado="por_vencer"><span class="dot naranja"></span> Por vencer <span class="badge-pill">2</span></button>
-                    <button class="pill-filter" data-estado="al_dia"><span class="dot verde"></span> Al día <span class="badge-pill">5</span></button>
-                    <button class="pill-filter" data-estado="sin_plan"><span class="dot azul"></span>Finalizados <span class="badge-pill"> 5</span></button>
-                </div>
-            </section>-->
 
             <!-- 5. LISTA DE CLIENTES -->
             <div class="lista-clientes" id="listaClientes"></div>
@@ -683,10 +660,9 @@
 </div>
 
 
-    <!-- Modal de Confirmación de Eliminación -->
 <!-- Modal de Confirmación de Eliminación -->
 <div id="modalEliminar" class="modal-overlay">
-    <div class="modal-container">
+    <div class="modal-containerrrr">
         <div class="alerta-icono">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -699,7 +675,7 @@
         <p>Esta acción es permanente. Se borrarán todos los datos de <strong><span id="nombreClienteEliminar"></span></strong>.</p>
         <div class="modal-acciones-v2">
             <button class="btn-secundario-v2" onclick="cerrarModalEliminar()">Cancelar</button>
-            <button class="btn-principal-v2" id="confirmarEliminar">Eliminar</button>
+            <button class="btn-principal-v22" id="confirmarEliminar">Eliminar</button>
         </div>
     </div>
 </div>
