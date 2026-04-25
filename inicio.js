@@ -231,17 +231,22 @@ async function cargarProximosCobros() {
 function configurarBotonVerTodos() {
     const btnVerTodos = document.getElementById('btn-ver-todos-cobros');
     if (!btnVerTodos) return;
-    
+
+    let expandido = false;
+
     if (todosLosCobros.length > 5) {
         btnVerTodos.style.display = 'block';
+        btnVerTodos.innerHTML = `Ver todos <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+
         btnVerTodos.onclick = () => {
-            const estaExpandido = btnVerTodos.innerText.includes("menos");
-            if (estaExpandido) {
+            if (expandido) {
                 renderizarListaCobros(todosLosCobros.slice(0, 5));
-                btnVerTodos.innerText = "Ver todos";
+                btnVerTodos.innerHTML = `Ver todos <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+                expandido = false;
             } else {
                 renderizarListaCobros(todosLosCobros);
-                btnVerTodos.innerText = "Ver menos";
+                btnVerTodos.innerHTML = `Ver menos <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+                expandido = true;
             }
         };
     } else {
