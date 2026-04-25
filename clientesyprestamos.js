@@ -306,7 +306,7 @@ function renderizarPagina() {
                 <div class="cliente-avatar">${iniciales}</div>
                 <div class="cliente-info">
                     <h3>${nombreCompleto}</h3>
-                    <p>Adeuda Total: <span class="monto-adeuda">$ ${deudaTotal.toLocaleString('es-AR')}</span></p>
+                    <p>Adeuda Total: <span class="monto-adeuda">$ ${Math.round(deudaTotal).toLocaleString('es-AR')}</span></p>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <div class="badge-estado badge-${estadoLimpio}">${estadoRaw.toUpperCase()}</div>
