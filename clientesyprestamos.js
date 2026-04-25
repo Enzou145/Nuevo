@@ -1122,8 +1122,13 @@ function prepararOtorgar(cliente) {
 
     // 5. Fecha Inicio: Hoy
     const inputFecha = document.getElementById('oto-fecha-inicio');
-    if(inputFecha) inputFecha.valueAsDate = new Date();
-
+    if(inputFecha) {
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        inputFecha.value = `${yyyy}-${mm}-${dd}`;
+    }
     // 6. Mostrar modal y CALCULAR
     document.getElementById('modalOtorgar').classList.add('active');
     calcularPrestamo();
