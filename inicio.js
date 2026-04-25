@@ -518,30 +518,36 @@ async function cargarTopClientes() {
         
         listaContenedor.innerHTML = "";
 
-        topArray.forEach((item, index) => {
-            const iniciales = item.nombre
-                .split(' ')
-                .filter(n => n.length > 0)
-                .map(n => n[0])
-                .join('')
-                .toUpperCase()
-                .substring(0, 2);
+topArray.forEach((item, index) => {
+    const iniciales = item.nombre
+        .split(' ')
+        .filter(n => n.length > 0)
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
 
-            const li = document.createElement('li');
-            li.className = 'top-item';
-            li.innerHTML = `
-                <div class="top-perfil">
-                    <div class="top-avatar">${iniciales}</div>
-                    <div class="top-detalles">
-                        <span class="top-nombre">${item.nombre}</span>
-                        <span class="top-rank">#${index + 1}</span>
-                    </div>
-                </div>
-                <span class="top-monto">${formatearMoneda(item.total)}</span>
-            `;
-            listaContenedor.appendChild(li);
-        });
-
+    const li = document.createElement('li');
+    li.className = 'top-item';
+    li.style.cursor = 'pointer';  // ← AGREGAR
+    li.innerHTML = `
+        <div class="top-perfil">
+            <div class="top-avatar">${iniciales}</div>
+            <div class="top-detalles">
+                <span class="top-nombre">${item.nombre}</span>
+                <span class="top-rank">#${index + 1}</span>
+            </div>
+        </div>
+        <span class="top-monto">${formatearMoneda(item.total)}</span>
+    `;
+    
+    // ← AGREGAR ESTO
+    li.onclick = () => {
+        window.location.href = `clientesyprestamos.html?cliente=${encodeURIComponent(item.nombre)}`;
+    };
+    
+    listaContenedor.appendChild(li);
+});
         if (topArray.length === 0) {
             listaContenedor.innerHTML = `<p style="color:gray; font-size:12px; text-align:center; padding: 20px;">No hay préstamos activos</p>`;
         }

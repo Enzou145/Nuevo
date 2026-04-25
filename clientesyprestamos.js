@@ -397,6 +397,26 @@ function renderizarPagina() {
         }
 
         listaContenedor.appendChild(card);
+
+        // Al terminar de renderizar, verificar si hay un cliente para destacar
+const params = new URLSearchParams(window.location.search);
+const clienteDestacado = params.get('cliente');
+
+if (clienteDestacado) {
+    const nombreBuscado = decodeURIComponent(clienteDestacado).toLowerCase();
+    const cards = listaContenedor.querySelectorAll('.cliente-card');
+    
+    cards.forEach(card => {
+        const nombreCard = card.querySelector('h3')?.innerText?.toLowerCase() || '';
+        if (nombreCard === nombreBuscado) {
+            card.classList.add('expanded');
+            setTimeout(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+    });
+}
+
     });
 }
 
