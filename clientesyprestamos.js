@@ -308,7 +308,12 @@ function renderizarPagina() {
                     <h3>${nombreCompleto}</h3>
                     <p>Adeuda Total: <span class="monto-adeuda">$ ${deudaTotal.toLocaleString('es-AR')}</span></p>
                 </div>
-                <div class="badge-estado badge-${estadoLimpio}">${estadoRaw.toUpperCase()}</div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="badge-estado badge-${estadoLimpio}">${estadoRaw.toUpperCase()}</div>
+                    <svg class="flecha-expandir" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease; color: var(--texto-secundario); flex-shrink:0;">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
             </div>
             <div class="cliente-detalles">
                 <div class="info-grid">
@@ -362,8 +367,12 @@ function renderizarPagina() {
             </div>`;
 
         // --- MANEJO DE EVENTOS ---
-        card.onclick = (e) => { if(!e.target.closest('button')) card.classList.toggle('expanded'); };
-        
+        card.onclick = (e) => {
+            if(e.target.closest('button')) return;
+            const yaExpandida = card.classList.contains('expanded');
+            document.querySelectorAll('.cliente-card.expanded').forEach(c => c.classList.remove('expanded'));
+            if(!yaExpandida) card.classList.add('expanded');
+        };        
         card.querySelector('.btn-ver-detalles').onclick = (e) => { 
             e.stopPropagation(); 
             // Nueva lógica: llamamos a una función verificadora
@@ -1337,7 +1346,9 @@ function aplicarFiltros() {
         const coincideEstado = filtroEstadoActivo === 'todos' || estado === filtroEstadoActivo;
         return coincideTexto && coincideEstado;
     });
-    renderizarClientes(filtrados);
+    clientesFiltrados = filtrados;
+    paginaActual = 1;
+    renderizarPagina();
 }
 
 
