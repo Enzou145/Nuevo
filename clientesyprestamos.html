@@ -460,9 +460,14 @@
         </div>
 
         <div class="modal-footer-detalle">
-            <button class="btn-cancelar" onclick="document.getElementById('modalDetalles').classList.remove('active')">Cerrar</button>
+            
+            <!-- NUEVO BOTÓN AGREGADO AQUÍ -->
+            <button class="btn-principal-v2 btn-editar-prestamo" style="background-color: var(--color-primario);">Editar Préstamo</button>
+            
             <button class="btn-guardar-solo btn-editar-cliente">Editar Cliente</button>
         </div>
+                    <button class="btn-cancelarr" onclick="document.getElementById('modalDetalles').classList.remove('active')">Cerrar</button>
+
     </div>
 </div>
 
@@ -679,6 +684,38 @@
         </div>
     </div>
 </div>
+
+
+
+<!-- MODAL SELECTOR DE PRÉSTAMOS (PARA CUANDO TIENE MÁS DE UNO) -->
+<div id="modalSelectorPrestamo" class="modal-v2">
+    <div class="modal-content-v2">
+        <div class="modal-header-v2">
+            <h2>Seleccionar Préstamo</h2>
+            <button class="btn-cerrar-modal" onclick="document.getElementById('modalSelectorPrestamo').classList.remove('active')">&times;</button>
+        </div>
+        <p>El cliente tiene varios préstamos activos. ¿Cuál desea cobrar?</p>
+        <div id="lista-prestamos-seleccion" style="padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 10px;">
+            <!-- Se llena por JS -->
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL SELECTOR DE PRÉSTAMOS (PARA VER DETALLES) -->
+<div id="modalSelectorPrestamoDetalle" class="modal-v2">
+    <div class="modal-content-v2">
+        <div class="modal-header-v2">
+            <h2>Seleccionar Préstamo</h2>
+            <button class="btn-cerrar-modal" onclick="document.getElementById('modalSelectorPrestamoDetalle').classList.remove('active')">&times;</button>
+        </div>
+        <p style="padding: 0 0px;">El cliente tiene varios préstamos activos. ¿De cuál desea ver el detalle?</p>
+        <div id="lista-prestamos-detalle-seleccion" style="padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 10px;">
+            <!-- Se llena por JS -->
+        </div>
+    </div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="clientesyprestamos.js"></script>
 

@@ -4,10 +4,16 @@ const SUPABASE_ANON_KEY = "sb_publishable_ELqT_WM7MrJonyYE6L6P1Q_kmAPw3bB";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-
+function formatearMoneda(valor) {
+    return `$ ${Number(valor).toLocaleString('es-AR', {
+        maximumFractionDigits: 0
+    })}`;
+}
 
 
 // 2. VARIABLES GLOBALES Y ELEMENTOS
+let prestamoSeleccionado = null;
+let prestamoEnEdicionId = null; // Para saber si estamos creando o editando
 const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado"));
 if (!usuarioLogueado) window.location.href = "index.html";
 
@@ -89,8 +95,8 @@ async function cargarClientesDB() {
     const { data, error } = await supabaseClient
         .from('clientes')
         .select(`
-        *,
-        prestamos (*)
+            *,
+            prestamos (*)
         `)
         .eq('user_id', usuarioLogueado.auth_user_id)
         .order('created_at', { ascending: false });
@@ -100,56 +106,97 @@ async function cargarClientesDB() {
         return;
     }
 
+    // 1. Guardamos la data en nuestra variable local
     clientes = data || [];
-
-const hoy = new Date();
-hoy.setHours(0, 0, 0, 0);
-
-for (const cliente of clientes) {
-    const prestamo = cliente.prestamos?.[0];
-    if (!prestamo || cliente.estado === 'finalizado' || cliente.estado === 'sin prestamo') continue;
-
-    const pagadas = prestamo.cuotas_pagadas || 0;
-    const totales = prestamo.cuotas_totales || 0;
-    if (pagadas >= totales) continue;
-
-    // Calcular fecha de próxima cuota
-    let fechaProxima = new Date(prestamo.fecha_inicio + 'T00:00:00');
-    const intervalo = prestamo.intervalo_pago || 1;
-    const frecuencia = prestamo.frecuencia_pago || 'Mensual';
-    const proximaCuota = pagadas + 1;
-
-    if (frecuencia === 'Diario') fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo));
-    else if (frecuencia === 'Semanal') fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo * 7));
-    else if (frecuencia === 'Mensual') fechaProxima.setMonth(fechaProxima.getMonth() + (proximaCuota * intervalo));
-
+    
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
     const mañana = new Date(hoy);
     mañana.setDate(mañana.getDate() + 1);
 
-    let nuevoEstado;
-    if (fechaProxima < hoy) {
-        nuevoEstado = 'atrasado';
-    } else if (fechaProxima.toDateString() === mañana.toDateString()) {
-        nuevoEstado = 'vence mañana';
-    } else {
-        nuevoEstado = 'al dia';
+    // 2. Procesamos cada cliente para determinar su estado real
+    for (const cliente of clientes) {
+        const misPrestamos = cliente.prestamos || [];
+        
+        // CASO A: No tiene ningún préstamo registrado
+        if (misPrestamos.length === 0) {
+            await actualizarEstadoLocalYDB(cliente, 'sin prestamo');
+            continue;
+        }
+
+        // CASO B: Filtrar préstamos que aún tienen cuotas por pagar
+        // IMPORTANTE: Un préstamo es activo si pagadas < totales
+        const prestamosActivos = misPrestamos.filter(p => 
+            (p.cuotas_pagadas || 0) < (p.cuotas_totales || 0)
+        );
+
+        // CASO C: Si tiene préstamos pero NINGUNO está activo (todos pagados)
+        if (prestamosActivos.length === 0) {
+            await actualizarEstadoLocalYDB(cliente, 'finalizado');
+            continue;
+        }
+
+        // CASO D: Tiene al menos un préstamo activo. 
+        // Buscamos el estado más crítico entre todos sus préstamos abiertos.
+        let estadoGlobal = 'al dia'; 
+
+        for (const prestamo of prestamosActivos) {
+            const pagadas = prestamo.cuotas_pagadas || 0;
+            // Usamos T00:00:00 para evitar desfases de zona horaria
+            let fechaProxima = new Date(prestamo.fecha_inicio + 'T00:00:00');
+            const intervalo = prestamo.intervalo_pago || 1;
+            const frecuencia = prestamo.frecuencia_pago || 'Mensual';
+            const proximaCuota = pagadas + 1;
+
+            // Calcular fecha de la siguiente cuota según frecuencia
+            if (frecuencia === 'Diario') {
+                fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo));
+            } else if (frecuencia === 'Semanal') {
+                fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo * 7));
+            } else if (frecuencia === 'Mensual') {
+                fechaProxima.setMonth(fechaProxima.getMonth() + (proximaCuota * intervalo));
+            }
+
+            let estadoEstePrestamo = 'al dia';
+            if (fechaProxima < hoy) {
+                estadoEstePrestamo = 'atrasado';
+            } else if (fechaProxima.toDateString() === mañana.toDateString()) {
+                estadoEstePrestamo = 'vence mañana';
+            }
+
+            // Jerarquía de criticidad: atrasado > vence mañana > al dia
+            if (estadoEstePrestamo === 'atrasado') {
+                estadoGlobal = 'atrasado';
+                break; // Si ya hay uno atrasado, es el estado que manda
+            } else if (estadoEstePrestamo === 'vence mañana') {
+                estadoGlobal = 'vence mañana';
+            }
+        }
+
+        // Actualizamos tanto en la base de datos como en el objeto local
+        await actualizarEstadoLocalYDB(cliente, estadoGlobal);
     }
 
+    // 3. Refrescar la interfaz
+    // Si usas una función de filtro llamala aquí, si no usa clientesFiltrados directamente
+    if (typeof filtrarClientes === 'function') {
+        filtrarClientes(); 
+    } else {
+        clientesFiltrados = [...clientes];
+        renderizarPagina(); 
+    }
 
-    // Solo actualiza si cambió el estado
+    if (document.getElementById('contadorTexto')) {
+        document.getElementById('contadorTexto').textContent = `${clientes.length} clientes`;
+    }
+}
+// Función auxiliar para no repetir código de actualización
+async function actualizarEstadoLocalYDB(cliente, nuevoEstado) {
     if (cliente.estado !== nuevoEstado) {
         await supabaseClient.from('clientes').update({ estado: nuevoEstado }).eq('id', cliente.id);
-        cliente.estado = nuevoEstado; // Actualiza local también
+        cliente.estado = nuevoEstado;
     }
 }
-
-    renderizarClientes(clientes);
-    
-    // Actualizar contador
-    if (contadorTexto) contadorTexto.textContent = `${clientes.length} clientes`;
-}
-
-
 
 
 /* ==========================================
@@ -177,14 +224,7 @@ function obtenerIniciales(nombreCompleto) {
 /* ==========================================
    3. FUNCIÓN DE RENDERIZADO (DIBUJAR LISTA)
    ========================================== */
-function renderizarClientes(datos) {
-    clientesFiltrados = datos;
-    paginaActual = 1;
-    renderizarPagina();
-}
-
 function renderizarPagina() {
-    
     if (!listaContenedor) return;
     listaContenedor.innerHTML = '';
 
@@ -196,25 +236,30 @@ function renderizarPagina() {
     const fin = Math.min(inicio + CLIENTES_POR_PAGINA, total);
     const clientesPagina = clientesFiltrados.slice(inicio, fin);
 
-   
-    // Paginación
     document.getElementById('infoPagina').innerText = `${paginaActual} / ${totalPaginas}`;
     document.getElementById('btnAnterior').disabled = paginaActual <= 1;
     document.getElementById('btnSiguiente').disabled = paginaActual >= totalPaginas;
+    document.getElementById('textoMostrando').innerText = total === 0 ? 'Sin clientes' : `Mostrando ${inicio + 1}–${fin}`;
+    document.getElementById('textoTotal').innerText = `${total} CLIENTES`;
 
-    // AGREGAR ESTO ↓
-document.getElementById('textoMostrando').innerText = total === 0 ? 'Sin clientes' : `Mostrando ${inicio + 1}–${fin}`;
-document.getElementById('textoTotal').innerText = `${total} CLIENTES`;
-
-    // === TODO LO DE ABAJO ES EXACTAMENTE IGUAL, SOLO CAMBIA datos.forEach → clientesPagina.forEach ===
     clientesPagina.forEach(cliente => { 
-        const prestamo = cliente.prestamos?.slice(-1)[0];
-        const cuotasPagadas = prestamo?.cuotas_pagadas || 0;
-        const cuotasTotales = prestamo?.cuotas_totales || 0;
+        const misPrestamos = cliente.prestamos || [];
+        
+        // 1. BUSCAMOS PRÉSTAMOS ACTIVOS
+        const prestamosActivos = misPrestamos.filter(p => (p.cuotas_pagadas || 0) < (p.cuotas_totales || 0));
+        
+        // 2. ELEGIMOS QUÉ MOSTRAR EN LA BARRA DE PROGRESO
+        const pPrincipal = prestamosActivos.length > 0 ? prestamosActivos[0] : misPrestamos[misPrestamos.length - 1];
 
-        const porcentaje = (cuotasTotales && cuotasPagadas >= 0)
-            ? Math.round((cuotasPagadas / cuotasTotales) * 100)
-            : 0;
+        // 3. CALCULAMOS DEUDA TOTAL REAL
+        const deudaTotal = misPrestamos.reduce((acc, p) => {
+            const saldo = p.total_devolver - (p.cuotas_pagadas * p.valor_cuota);
+            return acc + (saldo > 0 ? saldo : 0);
+        }, 0);
+
+        const cuotasPagadas = pPrincipal?.cuotas_pagadas || 0;
+        const cuotasTotales = pPrincipal?.cuotas_totales || 0;
+        const porcentaje = (cuotasTotales > 0) ? Math.round((cuotasPagadas / cuotasTotales) * 100) : 0;
         
         const nombreCompleto = `${cliente.nombre} ${cliente.apellido || ''}`;
         const estadoRaw = cliente.estado || 'sin prestamo';
@@ -222,113 +267,194 @@ document.getElementById('textoTotal').innerText = `${total} CLIENTES`;
         const iniciales = ((cliente.nombre?.charAt(0) || '') + (cliente.apellido?.charAt(0) || '')).toUpperCase();
         const direccionCompleta = `${cliente.calle || ''} ${cliente.nro_calle || ''} (${cliente.barrio || ''})`;
 
+        const esRealmenteFinalizado = misPrestamos.length > 0 && deudaTotal <= 0;
+        const esNuevo = misPrestamos.length === 0;
+
         const card = document.createElement('div');
         card.className = `cliente-card status-${estadoLimpio}`;
         
-        const esNuevo = estadoRaw === 'sin prestamo';
-        const esFinalizado = estadoRaw === 'finalizado';
-
+        // Lógica de botones unificada
         const accionesHTML = `
-    <div class="acciones-card">
-        <button class="btn-secundario-v2 btn-ver-detalles">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="acciones-card" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <button class="btn-secundario-v2 btn-ver-detalles" style="flex: 1;"> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            Ver detalles
-        </button>
-        ${esNuevo ? 
-            `<button class="btn-principal-v2 btn-otorgar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Otorgar préstamo
-            </button>` :
-        esFinalizado ? 
-            `<button class="btn-principal-v2 btn-eliminar" style="background-color: #ef4444; color: white;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                    <path d="M10 11v6"></path><path d="M14 11v6"></path>
-                </svg>
-                Eliminar
-            </button>` :
-            `<button class="btn-principal-v2 btn-cobrar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            </svg> Ver detalles</button>
+                ${esNuevo ? 
+                    `<button class="btn-principal-v2 btn-otorgar" style="flex: 1;">Otorgar préstamo</button>` :
+                esRealmenteFinalizado ? 
+                    `<button class="btn-principal-v2 btn-eliminar" style="flex: 1; background-color: #ef4444; color: white; border: none;">Eliminar</button>` :
+                    `<button class="btn-principal-v2 btn-cobrar" style="flex: 1;">                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="1" x2="12" y2="23"></line>
                     <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-                Cobrar cuota
-            </button>`
-        }
-    </div>`;
+                </svg> Cobrar cuota</button>`
+                }
+                
+                <!-- Botón de Otorgar otro préstamo: Visible siempre que el cliente NO sea nuevo -->
+                ${!esNuevo ? `
+                <button class="btn-principal-v2 btn-otorgar-otro" style="width: 100%; margin-top: 3px; background-color: #10b981; border: none; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Otorgar otro préstamo
+                </button>                ` : ''}
+            </div>`;
 
         card.innerHTML = `
-    <div class="cliente-header">
-        <div class="cliente-avatar">${iniciales}</div>
-        <div class="cliente-info">
-            <h3>${nombreCompleto}</h3>
-            <p>Adeuda: <span class="monto-adeuda">$ ${(prestamo ? (prestamo.total_devolver - (prestamo.cuotas_pagadas * prestamo.valor_cuota)) : 0).toLocaleString('es-AR', {maximumFractionDigits: 0})}</span></p>
-        </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="badge-estado badge-${estadoLimpio}">${estadoRaw.toUpperCase()}</div>
-            <div class="chevron-detalle">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-            </div>
-        </div>
-    </div>
-    <div class="cliente-detalles">
-        <div class="info-grid">
-            <div class="info-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                <strong>Dni:</strong> ${cliente.dni || '-'}
-            </div>
-            <div class="info-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                <strong>Tel:</strong> ${cliente.telefono || '-'}
-            </div>
-            <div class="info-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                <strong>Loc:</strong> ${direccionCompleta}
-            </div>
-            <div class="info-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                <strong>Job:</strong> ${cliente.ocupacion || '-'}
-            </div>
-        </div>
-        ${!esNuevo ? `
-            <div class="cuotas-progreso">
-                <div class="progreso-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                        $ ${(prestamo?.total_devolver || 0).toLocaleString('es-AR', {maximumFractionDigits: 2})} · ${cuotasPagadas}/${cuotasTotales} cuotas
-                    </span>
+            <div class="cliente-header">
+                <div class="cliente-avatar">${iniciales}</div>
+                <div class="cliente-info">
+                    <h3>${nombreCompleto}</h3>
+                    <p>Adeuda Total: <span class="monto-adeuda">$ ${deudaTotal.toLocaleString('es-AR')}</span></p>
                 </div>
-                <div class="barra-fondo">
-                    <div class="barra-completada" style="width: ${porcentaje}%"></div>
-                </div>
+                <div class="badge-estado badge-${estadoLimpio}">${estadoRaw.toUpperCase()}</div>
             </div>
-        ` : ''}
-        ${accionesHTML} 
-    </div>`;
+            <div class="cliente-detalles">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                        <strong>Dni:</strong> ${cliente.dni || '-'}
+                    </div>
+                    <div class="info-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        <strong>Tel:</strong> ${cliente.telefono || '-'}
+                    </div>
+                    <div class="info-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <strong>Loc:</strong> ${direccionCompleta}
+                    </div>
+                    <div class="info-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        <strong>Job:</strong> ${cliente.ocupacion || '-'}
+                    </div>
+                </div>
+                ${!esNuevo ? `
+                    <div class="cuotas-progreso" style="
+                        background-color: var(--otros-fondo);
+                        border: 1px solid var(--borde-suave);
+                        border-radius: 10px;
+                        padding: 12px 16px;
+                        margin-top: 10px;
+                        margin-bottom: 15px;">
 
+                        <p style="
+                            color: var(--texto-principal);
+                            font-size: 13px;
+                            font-weight: 600;
+                            margin: 0 0 8px 0;
+                            display: flex;
+                            align-items: center;
+                            gap: 7px;
+                            letter-spacing: 0.01em;">
+
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke= var(--texto-principal) stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                <line x1="2" y1="10" x2="22" y2="10"></line>
+                            </svg>
+                            $ ${pPrincipal?.total_devolver?.toLocaleString('es-AR') || 0} · ${cuotasPagadas}/${cuotasTotales} cuotas
+                        </p>
+                        <div class="barra-fondo"><div class="barra-completada" style="width: ${porcentaje}%"></div></div>
+                        ${prestamosActivos.length > 1 ? `<small style="color: var(--texto-secundario); font-weight: 500; font-size: 12px">+${prestamosActivos.length - 1} préstamos activos</small>` : ''}
+                    </div>
+                ` : ''}
+                ${accionesHTML} 
+            </div>`;
+
+        // --- MANEJO DE EVENTOS ---
         card.onclick = (e) => { if(!e.target.closest('button')) card.classList.toggle('expanded'); };
-        card.querySelector('.btn-ver-detalles').onclick = (e) => { e.stopPropagation(); abrirModalDetalles(cliente); };
+        
+        card.querySelector('.btn-ver-detalles').onclick = (e) => { 
+            e.stopPropagation(); 
+            // Nueva lógica: llamamos a una función verificadora
+            verificarPrestamosParaDetalle(cliente);  
+        };
 
-        if (esFinalizado) {
-            const btnEliminar = card.querySelector('.btn-eliminar');
-            if (btnEliminar) btnEliminar.onclick = (e) => { e.stopPropagation(); abrirModalEliminar(cliente); };
+        if (esNuevo) {
+            card.querySelector('.btn-otorgar').onclick = (e) => { e.stopPropagation(); prepararOtorgar(cliente); };
+        } else if (esRealmenteFinalizado) {
+            card.querySelector('.btn-eliminar').onclick = (e) => { e.stopPropagation(); abrirModalEliminar(cliente); };
         } else {
-            const btnAccion = card.querySelector('.btn-otorgar') || card.querySelector('.btn-cobrar');
-            if (btnAccion) btnAccion.onclick = (e) => { e.stopPropagation(); esNuevo ? prepararOtorgar(cliente) : abrirModalCobro(cliente); };
+            card.querySelector('.btn-cobrar').onclick = (e) => { e.stopPropagation(); abrirModalCobro(cliente); };
+        }
+
+        // Evento para el botón verde de "Otorgar otro"
+        const btnOtro = card.querySelector('.btn-otorgar-otro');
+        if (btnOtro) {
+            btnOtro.onclick = (e) => { 
+                e.stopPropagation(); 
+                prepararOtorgar(cliente); 
+            };
         }
 
         listaContenedor.appendChild(card);
     });
 }
+
+
+
+
+// Esta función decide si abre el detalle directo o el selector
+function verificarPrestamosParaDetalle(cliente) {
+    const prestamosActivos = (cliente.prestamos || []).filter(
+        p => p.estado_prestamo?.toLowerCase() === 'activo'
+    );
+
+    if (prestamosActivos.length <= 1) {
+        // Si tiene 0 o 1, abrimos el detalle como siempre
+        abrirModalDetalles(cliente);
+    } else {
+        // Si tiene más de uno, abrimos el NUEVO selector
+        abrirSelectorPrestamosDetalle(cliente, prestamosActivos);
+    }
+}
+
+// Llena el nuevo modal que creamos en el HTML
+function abrirSelectorPrestamosDetalle(cliente, prestamos) {
+    const contenedor = document.getElementById('lista-prestamos-detalle-seleccion');
+    const modalSelector = document.getElementById('modalSelectorPrestamoDetalle');
+    
+    contenedor.innerHTML = "";
+
+    prestamos.forEach(p => {
+        const pagadas = p.cuotas_pagadas || 0;
+        const totales = p.cuotas_totales || 0;
+        const porcentaje = totales > 0 ? Math.round((pagadas / totales) * 100) : 0;
+
+        const item = document.createElement('div');
+        item.style.cssText = `
+            background-color: var(--otros-fondo);
+            border: 1px solid var(--borde-suave);
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+        `;
+        
+        item.innerHTML = `
+            <p style="color: var(--texto-principal); font-size: 13px; font-weight: 700; margin: 0 0 8px 0; display: flex; align-items: center; gap: 7px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+                $ ${p.monto_prestado?.toLocaleString('es-AR')} · ${pagadas}/${totales} cuotas
+            </p>
+            <div style="background-color: var(--barra-estado); border-radius: 999px; height: 5px;">
+                <div style="width: ${porcentaje}%; height: 100%; border-radius: 999px; background-color: #3b82f6;"></div>
+            </div>
+        `;
+        
+        item.onclick = () => {
+            modalSelector.classList.remove('active');
+            abrirModalDetalles(cliente, p);
+        };
+        contenedor.appendChild(item);
+    });
+
+    modalSelector.classList.add('active');
+}
+
+
+
 
 let clienteAEliminarId = null;
 
@@ -477,53 +603,105 @@ btnCerrarCobroX.onclick = () => modalCobro.classList.remove('active');
    ========================================== */
 function abrirModalCobro(cliente) {
 
+    const prestamosActivos = (cliente.prestamos || []).filter(
+        p => p.estado_prestamo?.toLowerCase() === 'activo'
+    );
 
-    const prestamo = cliente.prestamos?.[0];
-    if (!prestamo) {
-        alert("Este cliente no tiene préstamo");
+    if (prestamosActivos.length === 0) {
+        alert("Este cliente no tiene préstamos activos.");
         return;
     }
 
-    const pagadas = prestamo.cuotas_pagadas || 0;
-    const totales = prestamo.cuotas_totales || 0;
-    const porcentaje = totales > 0 ? (pagadas / totales) * 100 : 0;
-
-    const barra = document.getElementById('barraProgresoCobro');
-    if (barra) barra.style.width = `${porcentaje}%`;
-
-    const nombreCliente = document.getElementById('nombreClienteCobro');
-    if (nombreCliente) {
-        nombreCliente.innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
+    if (prestamosActivos.length === 1) {
+        mostrarInterfazCobro(cliente, prestamosActivos[0]);
+    } else {
+        abrirSelectorPrestamos(cliente, prestamosActivos);
     }
+}
 
-    clienteSeleccionado = cliente;
-    cuotasAPagar = 1;
+function abrirSelectorPrestamos(cliente, prestamos) {
+    const contenedor = document.getElementById('lista-prestamos-seleccion');
+    const modalSelector = document.getElementById('modalSelectorPrestamo');
+    
+    contenedor.innerHTML = "";
 
-document.getElementById('cobroMonto').innerText = `$ ${prestamo.monto_prestado.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
-document.getElementById('cobroTotal').innerText = `$ ${prestamo.total_devolver.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
-document.getElementById('cobroCuota').innerText = `$ ${prestamo.valor_cuota.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
-document.getElementById('cobroProgreso').innerText = `${pagadas}/${totales}`;
-    const restantes = totales - pagadas;
+    prestamos.forEach(p => {
+        const pagadas = p.cuotas_pagadas || 0;
+        const totales = p.cuotas_totales || 0;
+        const porcentaje = totales > 0 ? Math.round((pagadas / totales) * 100) : 0;
 
+        const item = document.createElement('div');
+        item.style.cssText = `
+            background-color: var(--otros-fondo);
+            border: 1px solid var(--borde-suave);
+            border-radius: 10px;
+            padding: 12px 16px;
+            cursor: pointer;
+        `;
+        
+        item.innerHTML = `
+            <p style="color: var(--texto-principal); font-size: 13px; font-weight: 700; margin: 0 0 8px 0; display: flex; align-items: center; gap: 7px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+                $ ${p.monto_prestado?.toLocaleString('es-AR')} · ${pagadas}/${totales} cuotas
+            </p>
+            <div style="background-color: var(--barra-estado); border-radius: 999px; height: 5px;">
+                <div style="width: ${porcentaje}%; height: 100%; border-radius: 999px; background-color: #3b82f6;"></div>
+            </div>
+        `;
+        
+        item.onclick = () => {
+            modalSelector.classList.remove('active');
+            mostrarInterfazCobro(cliente, p);
+        };
+        contenedor.appendChild(item);
+    });
 
-    actualizarCalculoCobro();
-    modalCobro.classList.add('active');
-
-    document.getElementById('textoProgresoCobro').innerText = `${pagadas} DE ${totales} cuotas`;
-    document.getElementById('porcentajeCobro').innerText = `${Math.round(porcentaje)}%`;
-
-    const porcentajeEl = document.getElementById('porcentajeCobro');
+    modalSelector.classList.add('active');
 }
 
 /* ==========================================
    LÓGICA DE LA CALCULADORA DE CUOTAS
    ========================================== */
 
+function mostrarInterfazCobro(cliente, prestamo) {
+    // Guardamos qué préstamo se está operando globalmente
+    clienteSeleccionado = cliente;
+    prestamoSeleccionado = prestamo; 
+    cuotasAPagar = 1;
+
+    // 1. Nombre del cliente
+    document.getElementById('nombreClienteCobro').innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
+    
+    // 2. Datos reales de la tabla 'prestamos'
+    document.getElementById('cobroMonto').innerText = formatearMoneda(prestamo.monto_prestado);
+    document.getElementById('cobroTotal').innerText = formatearMoneda(prestamo.total_devolver);
+    document.getElementById('cobroCuota').innerText = formatearMoneda(prestamo.valor_cuota);
+    
+    // 3. Progreso de cuotas
+    const pagadas = prestamo.cuotas_pagadas || 0;
+    const totales = prestamo.cuotas_totales || 0;
+    document.getElementById('cobroProgreso').innerText = `${pagadas}/${totales}`;
+    document.getElementById('textoProgresoCobro').innerText = `${pagadas} DE ${totales} CUOTAS`;
+
+    // 4. Barra de progreso visual
+    const porcentaje = totales > 0 ? (pagadas / totales) * 100 : 0;
+    document.getElementById('barraProgresoCobro').style.width = `${porcentaje}%`;
+    document.getElementById('porcentajeCobro').innerText = `${Math.round(porcentaje)}%`;
+
+    // 5. Calcular el total inicial (1 cuota)
+    actualizarCalculoCobro();
+    
+    // 6. Abrir modal
+    document.getElementById('modalCobrarCuota').classList.add('active');
+}
 
 function actualizarCalculoCobro() {
     if (!clienteSeleccionado) return;
 
-    const prestamo = clienteSeleccionado.prestamos?.[0];
+    const prestamo = prestamoSeleccionado;
     if (!prestamo) return;
 
     displayCant.innerText = cuotasAPagar;
@@ -535,18 +713,16 @@ function actualizarCalculoCobro() {
 
 // Botón +
 document.getElementById('btnMas').onclick = () => {
-    const prestamo = clienteSeleccionado.prestamos?.[0];
-    const restantes = prestamo.cuotas_totales - prestamo.cuotas_pagadas;
+    const restantes = prestamoSeleccionado.cuotas_totales - prestamoSeleccionado.cuotas_pagadas;
 
     if (cuotasAPagar < restantes) {
         cuotasAPagar++;
         actualizarCalculoCobro();
     }
 };
-
 // Botón -
 document.getElementById('btnMenos').onclick = () => {
-    if (cuotasAPagar > 1) { // Límite mínimo
+    if (cuotasAPagar > 1) {
         cuotasAPagar--;
         actualizarCalculoCobro();
     }
@@ -555,42 +731,29 @@ document.getElementById('btnMenos').onclick = () => {
 
 
 // Botón Confirmar Pago (Para cerrar y guardar)
+// Botón Confirmar Pago (Corregido para evaluar estado global)
 document.querySelector('.btn-confirmar-final').onclick = async () => {
+    if (!clienteSeleccionado || !prestamoSeleccionado) return;
 
-    if (!clienteSeleccionado) return;
-
-    const prestamo = clienteSeleccionado.prestamos?.[0];
-    if (!prestamo) return;
-
+    const prestamo = prestamoSeleccionado;
     const nuevasPagadas = prestamo.cuotas_pagadas + cuotasAPagar;
+    const esPrestamoFinalizado = nuevasPagadas >= prestamo.cuotas_totales;
 
-    // 1. ACTUALIZAR PRESTAMO
+    // 1. ACTUALIZAR EL PRÉSTAMO ESPECÍFICO
     const { error: errorPrestamo } = await supabaseClient
         .from('prestamos')
         .update({
-        cuotas_pagadas: nuevasPagadas,
-        estado_prestamo: nuevasPagadas >= prestamo.cuotas_totales  ? 'finalizado'  : 'activo'        })
+            cuotas_pagadas: nuevasPagadas,
+            estado_prestamo: esPrestamoFinalizado ? 'finalizado' : 'activo'
+        })
         .eq('id', prestamo.id);
 
     if (errorPrestamo) {
-        alert("Error actualizando préstamo");
+        console.error("Error al actualizar préstamo:", errorPrestamo);
         return;
     }
 
-    // 2. ACTUALIZAR CLIENTE
-    const estadoCliente = nuevasPagadas >= prestamo.cuotas_totales ? 'finalizado' : 'al dia';
-
-    const { error: errorCliente } = await supabaseClient
-        .from('clientes')
-        .update({ estado: estadoCliente })
-        .eq('id', clienteSeleccionado.id);
-
-    if (errorCliente) {
-        alert("Error actualizando cliente");
-        return;
-    }
-
-    // 3. GUARDAR PAGO
+    // 2. GUARDAR EL REGISTRO DEL PAGO
     await supabaseClient.from('pagos').insert([{
         user_id: usuarioLogueado.auth_user_id,
         prestamo_id: prestamo.id,
@@ -598,13 +761,35 @@ document.querySelector('.btn-confirmar-final').onclick = async () => {
         cantidad_cuotas_pagadas: cuotasAPagar
     }]);
 
-    alert("✅ Pago registrado");
+    // 3. REVISAR ESTADO GLOBAL DEL CLIENTE
+    // Traemos todos los préstamos para ver si queda alguno activo
+    const { data: todosLosPrestamos } = await supabaseClient
+        .from('prestamos')
+        .select('cuotas_pagadas, cuotas_totales')
+        .eq('cliente_id', clienteSeleccionado.id);
 
+    // Un cliente sigue activo si tiene al menos un préstamo donde las pagadas sean menos que las totales
+    const tienePrestamosActivos = todosLosPrestamos.some(p => 
+        (p.cuotas_pagadas || 0) < (p.cuotas_totales || 0)
+    );
+
+    // Solo si NO tiene activos, el estado es 'finalizado'
+    // Si tiene activos, lo dejamos 'al dia' (la función cargarClientesDB luego precisará si es 'atrasado')
+    const nuevoEstadoCliente = tienePrestamosActivos ? 'al dia' : 'finalizado';
+
+    // 4. ACTUALIZAR EL ESTADO DEL CLIENTE EN LA TABLA CLIENTES
+    await supabaseClient
+        .from('clientes')
+        .update({ estado: nuevoEstadoCliente })
+        .eq('id', clienteSeleccionado.id);
+
+    // FINALIZAR PROCESO
+    alert("✅ Pago registrado con éxito");
     modalCobro.classList.remove('active');
 
+    // Refrescamos la base de datos local y la interfaz
     await cargarClientesDB();
 };
-
 
 // Botón Cerrar
 document.getElementById('btnCerrarCobro').onclick = () => {
@@ -637,7 +822,8 @@ async function eliminarPrestamo(prestamoId, clienteId) {
 /* ==========================================
    LÓGICA MODAL DETALLES (CORREGIDA)
    ========================================== */
-function abrirModalDetalles(cliente) {
+// Agregamos el parámetro "prestamoForzado"
+function abrirModalDetalles(cliente, prestamoForzado = null) {
     if (!cliente) return;
     clienteSeleccionado = cliente; 
 
@@ -663,7 +849,8 @@ function abrirModalDetalles(cliente) {
     document.getElementById('det-monto').value = cliente.garantia_valor ? `$ ${cliente.garantia_valor.toLocaleString('es-AR', {maximumFractionDigits: 2})}` : "-";
     
     // 3. Datos del préstamo
-    const prestamo = cliente.prestamos?.slice(-1)[0];
+    const prestamo = prestamoForzado || cliente.prestamos?.slice(-1)[0];
+
     const montoPrestado = prestamo?.monto_prestado || 0;
     const montoTotal = prestamo?.total_devolver || 0;
     const cuotasPagas = prestamo?.cuotas_pagadas || 0;
@@ -697,6 +884,47 @@ function abrirModalDetalles(cliente) {
     else {
         barra.style.backgroundColor = "#94a3b8"; // Gris por defecto (si no tiene préstamo)
     }
+
+// Botón "Editar Préstamo" dentro del Modal de Detalles
+const btnIrAEditarPrestamo = document.querySelector('.btn-editar-prestamo');
+if (btnIrAEditarPrestamo) {
+    btnIrAEditarPrestamo.onclick = () => {
+        const prestamo = clienteSeleccionado.prestamos?.slice(-1)[0];
+        if (!prestamo) {
+            alert("Este cliente no tiene un préstamo activo para editar.");
+            return;
+        }
+        document.getElementById('modalDetalles').classList.remove('active');
+        abrirEdicionPrestamo(clienteSeleccionado, prestamo);
+    };
+}
+
+function abrirEdicionPrestamo(cliente, prestamo) {
+    prestamoEnEdicionId = prestamo.id; // Guardamos el ID para el UPDATE
+    clienteSeleccionado = cliente;
+
+    // 1. Llenar los campos del modal de Otorgar con los datos actuales
+    document.getElementById('oto-monto').value = prestamo.monto_prestado.toLocaleString('es-AR');
+    document.getElementById('oto-interes').value = prestamo.interes_porcentaje;
+    document.getElementById('oto-cuotas').value = prestamo.cuotas_totales;
+    document.getElementById('oto-frec-tipo').value = prestamo.frecuencia_pago;
+    document.getElementById('oto-fecha-inicio').value = prestamo.fecha_inicio;
+    
+    document.getElementById('oto-nombre-sub').innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
+
+    // 2. Marcar el botón de frecuencia correcto
+    document.querySelectorAll('.oto-frec-btn').forEach(btn => {
+        btn.classList.toggle('oto-frec-active', btn.dataset.value === prestamo.frecuencia_pago);
+    });
+
+    // 3. Cambiar el texto del botón de acción
+    const btnGuardar = document.querySelector('#modalOtorgar .btn-guardar-prestamo');
+    btnGuardar.innerText = "Actualizar Préstamo";
+
+    // 4. Abrir modal y calcular
+    document.getElementById('modalOtorgar').classList.add('active');
+    calcularPrestamo();
+}
     
 
     document.getElementById('det-progreso-texto').innerText = `${cuotasPagas} DE ${cuotasTotales} CUOTAS PAGADAS`;
@@ -866,30 +1094,38 @@ document.getElementById('btnCancelarEditar').onclick = () => {
    LÓGICA OTORGAR PRÉSTAMO (SUBIR A DB)
    ========================================== */
 function prepararOtorgar(cliente) {
+    // 0. Reset de estado: muy importante para que no haga UPDATE por error
+    prestamoEnEdicionId = null; 
     clienteSeleccionado = cliente; 
 
-    // 1. Limpiar el monto para que no quede el del cliente anterior
-    const montoInput = document.getElementById('oto-monto');
-    if(montoInput) montoInput.value = "";
+    // 1. Reset de interfaz: cambiamos textos a modo "Crear"
+    const btnGuardar = document.querySelector('#modalOtorgar .btn-guardar-prestamo');
+    if (btnGuardar) btnGuardar.innerText = "Otorgar Préstamo";
+    
+    const tituloModal = document.querySelector('#modalOtorgar h2');
+    if (tituloModal) tituloModal.innerText = "Otorgar Nuevo Préstamo";
 
-    // 2. Llenar el nombre en el modal
+    // 2. Limpiar y resetear campos a valores por defecto
+    document.getElementById('oto-monto').value = "";
+    document.getElementById('oto-interes').value = "20"; // O tu valor por defecto
+    document.getElementById('oto-cuotas').value = "6"; // O tu valor por defecto
+    
+    // 3. Llenar el nombre en el modal
     const subNombre = document.getElementById('oto-nombre-sub');
     if (subNombre) subNombre.innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
 
-    // 3. Sincronizar Frecuencia: Asegurar que el input oculto coincida con el botón azul
-    const btnActivo = document.querySelector('.oto-frec-btn.oto-frec-active');
-    if (btnActivo) {
-        document.getElementById('oto-frec-tipo').value = btnActivo.dataset.value;
-    }
+    // 4. Sincronizar Frecuencia: Por defecto "Diario" (o la que prefieras)
+    document.querySelectorAll('.oto-frec-btn').forEach(btn => {
+        btn.classList.toggle('oto-frec-active', btn.dataset.value === 'diario');
+    });
+    document.getElementById('oto-frec-tipo').value = 'diario';
 
-    // 4. Fecha Inicio: Hoy
+    // 5. Fecha Inicio: Hoy
     const inputFecha = document.getElementById('oto-fecha-inicio');
     if(inputFecha) inputFecha.valueAsDate = new Date();
 
-    // 5. Mostrar modal y CALCULAR INMEDIATAMENTE
+    // 6. Mostrar modal y CALCULAR
     document.getElementById('modalOtorgar').classList.add('active');
-    
-    // Ejecutamos el cálculo para que la Fecha Fin se actualice al abrir
     calcularPrestamo();
 }
 
@@ -904,14 +1140,10 @@ function seleccionarFrecuencia(btn) {
 async function confirmarOtorgarPrestamo() {
     if (!clienteSeleccionado) return;
 
-      // CORRECCIÓN: Quitamos los puntos antes de convertir a número
     const montoRaw = document.getElementById('oto-monto').value;
     const montoPrestado = parseFloat(montoRaw.replace(/\./g, '')) || 0; 
-    
-
     const interes = parseFloat(document.getElementById('oto-interes').value) || 0;
     const cuotas = parseInt(document.getElementById('oto-cuotas').value) || 1;
-    const cadaX = parseInt(document.getElementById('oto-frec-valor').value) || 1;
     const frecuencia = document.getElementById('oto-frec-tipo').value;
     const fechaInicio = document.getElementById('oto-fecha-inicio').value;
     const fechaFin = document.getElementById('oto-fecha-fin').value;
@@ -924,38 +1156,50 @@ async function confirmarOtorgarPrestamo() {
     const totalADevolver = montoPrestado + (montoPrestado * (interes / 100));
     const valorCuota = totalADevolver / cuotas;
 
+    const datosPrestamo = {
+        monto_prestado: montoPrestado,
+        interes_porcentaje: interes,
+        cuotas_totales: cuotas,
+        frecuencia_pago: frecuencia,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+        total_devolver: totalADevolver,
+        valor_cuota: valorCuota
+    };
+
     try {
-        // 1️⃣ INSERTAR EN PRESTAMOS
-        const { error: errorPrestamo } = await supabaseClient
-            .from('prestamos')
-            .insert([{
-                user_id: usuarioLogueado.auth_user_id,
-                cliente_id: clienteSeleccionado.id,
-                monto_prestado: montoPrestado,
-                interes_porcentaje: interes,
-                cuotas_totales: cuotas,
-                intervalo_pago: cadaX,
-                frecuencia_pago: frecuencia,
-                fecha_inicio: fechaInicio,
-                fecha_fin: fechaFin,
-                total_devolver: totalADevolver,
-                valor_cuota: valorCuota,
-                estado_prestamo: 'activo'
-            }]);
+        let error;
 
-        if (errorPrestamo) throw errorPrestamo;
+        if (prestamoEnEdicionId) {
+            // --- ACTUALIZAR EXISTENTE ---
+            const result = await supabaseClient
+                .from('prestamos')
+                .update(datosPrestamo)
+                .eq('id', prestamoEnEdicionId);
+            error = result.error;
+        } else {
+            // --- INSERTAR NUEVO ---
+            const result = await supabaseClient
+                .from('prestamos')
+                .insert([{
+                    ...datosPrestamo,
+                    user_id: usuarioLogueado.auth_user_id,
+                    cliente_id: clienteSeleccionado.id,
+                    estado_prestamo: 'activo',
+                    cuotas_pagadas: 0,
+                    intervalo_pago: 1
+                }]);
+            error = result.error;
+            
+            // Actualizar estado del cliente solo si es nuevo
+            await supabaseClient.from('clientes').update({ estado: 'al dia' }).eq('id', clienteSeleccionado.id);
+        }
 
-        // 2️⃣ ACTUALIZAR CLIENTE
-        const { error: errorCliente } = await supabaseClient
-            .from('clientes')
-            .update({ estado: 'al dia' })
-            .eq('id', clienteSeleccionado.id);
+        if (error) throw error;
 
-        if (errorCliente) throw errorCliente;
-
-        alert("✅ Préstamo otorgado con éxito");
-
+        alert(prestamoEnEdicionId ? "✅ Préstamo actualizado" : "✅ Préstamo otorgado");
         document.getElementById('modalOtorgar').classList.remove('active');
+        prestamoEnEdicionId = null; // Resetear
         await cargarClientesDB();
 
     } catch (err) {
@@ -963,7 +1207,6 @@ async function confirmarOtorgarPrestamo() {
         alert("Error: " + err.message);
     }
 }
-
 
 // IMPORTANTE: Vincula el botón del modal con la función
 // Ejecuta esto al final de tu archivo o dentro de DOMContentLoaded
