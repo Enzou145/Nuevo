@@ -97,6 +97,8 @@ function ejecutarCargasDashboard() {
 //  ------- MODAL DE VIENBENIDA POR PRIMERA VEZ -----------
 
 function mostrarBienvenida(nombre) {
+    // Si ya lo vio antes, no mostrar
+    if (localStorage.getItem("onboardingCompleto") === "true") return;
     const modal = document.getElementById('modal-bienvenida');
     const btn = document.getElementById('btn-comenzar-onboarding');
     const titulo = document.getElementById('titulo-bienvenida');
@@ -737,6 +739,8 @@ function formatearMonto(numero) {
 // INICIO (CONTROL ONBOARDING) - CORREGIDO
 // ===============================
 window.addEventListener("load", function () {
+     // Siempre ocultamos el modal aquí, lo maneja inicializarApp()
+    modalBienvenida.style.display = "none";
     const capitalGuardado = localStorage.getItem("capitalInicial");
     const onboardingCompleto = localStorage.getItem("onboardingCompleto");
 
