@@ -160,17 +160,21 @@ async function cargarClientesDB() {
             let estadoEstePrestamo = 'al dia';
             if (fechaProxima < hoy) {
                 estadoEstePrestamo = 'atrasado';
+            } else if (fechaProxima.toDateString() === hoy.toDateString()) {   // ← AGREGAR
+                estadoEstePrestamo = 'vence hoy';                               // ← AGREGAR
             } else if (fechaProxima.toDateString() === mañana.toDateString()) {
                 estadoEstePrestamo = 'vence mañana';
             }
 
             // Jerarquía de criticidad: atrasado > vence mañana > al dia
-            if (estadoEstePrestamo === 'atrasado') {
-                estadoGlobal = 'atrasado';
-                break; // Si ya hay uno atrasado, es el estado que manda
-            } else if (estadoEstePrestamo === 'vence mañana') {
-                estadoGlobal = 'vence mañana';
-            }
+if (estadoEstePrestamo === 'atrasado') {
+    estadoGlobal = 'atrasado';
+    break;
+} else if (estadoEstePrestamo === 'vence hoy') {    // ← AGREGAR
+    if (estadoGlobal !== 'atrasado') estadoGlobal = 'vence hoy';  // ← AGREGAR
+} else if (estadoEstePrestamo === 'vence mañana') {
+    estadoGlobal = 'vence mañana';
+}
         }
 
         // Actualizamos tanto en la base de datos como en el objeto local
@@ -303,7 +307,7 @@ function renderizarPagina() {
 
         card.innerHTML = `
             <div class="cliente-header">
-                <div class="cliente-avatar">${iniciales}</div>
+                <div class="cliente-avatar avatar-${estadoLimpio}">${iniciales}</div>
                 <div class="cliente-info">
                     <h3>${nombreCompleto}</h3>
                     <p>Adeuda Total: <span class="monto-adeuda">$ ${Math.round(deudaTotal).toLocaleString('es-AR')}</span></p>
@@ -859,10 +863,38 @@ function abrirModalDetalles(cliente, prestamoForzado = null) {
     // 1. Textos en etiquetas (<span>, <h2>, etc.) - Usan .innerText
     document.getElementById('det-cliente-nombre-cabecera').innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
     
-    const estadoRaw = cliente.estado || 'sin prestamo';
-    const badgeEstado = document.getElementById('det-estado-badge');
-    badgeEstado.innerText = estadoRaw.toUpperCase();
-    badgeEstado.className = `badge-estado badge-${estadoRaw.toLowerCase().replace(/\s+/g, '-')}`;
+const badgeEstado = document.getElementById('det-estado-badge');
+
+// Calcular el estado REAL del préstamo específico
+let estadoCalculado = cliente.estado || 'sin prestamo';
+
+const prestamoParaBadge = prestamoForzado || cliente.prestamos?.slice(-1)[0];
+if (prestamoParaBadge) {
+    const pag = prestamoParaBadge.cuotas_pagadas || 0;
+    const tot = prestamoParaBadge.cuotas_totales || 0;
+
+    if (pag >= tot && tot > 0) {
+        estadoCalculado = 'finalizado';
+    } else if (tot > 0) {
+        const hoyB = new Date(); hoyB.setHours(0,0,0,0);
+        const mananaB = new Date(hoyB); mananaB.setDate(mananaB.getDate() + 1);
+        const intervalo = prestamoParaBadge.intervalo_pago || 1;
+        const frecuencia = prestamoParaBadge.frecuencia_pago || 'Mensual';
+        let fechaProx = new Date(prestamoParaBadge.fecha_inicio + 'T00:00:00');
+        const proxNum = pag + 1;
+        if (frecuencia === 'Diario') fechaProx.setDate(fechaProx.getDate() + (proxNum * intervalo));
+        else if (frecuencia === 'Semanal') fechaProx.setDate(fechaProx.getDate() + (proxNum * intervalo * 7));
+        else if (frecuencia === 'Mensual') fechaProx.setMonth(fechaProx.getMonth() + (proxNum * intervalo));
+
+        if (fechaProx < hoyB) estadoCalculado = 'atrasado';
+        else if (fechaProx.toDateString() === hoyB.toDateString()) estadoCalculado = 'vence hoy';
+        else if (fechaProx.toDateString() === mananaB.toDateString()) estadoCalculado = 'vence mañana';
+        else estadoCalculado = 'al dia';
+    }
+}
+
+badgeEstado.innerText = estadoCalculado.toUpperCase();
+badgeEstado.className = `badge-estado badge-${estadoCalculado.toLowerCase().replace(/\s+/g, '-')}`;
 
     // 2. Datos en INPUTS - !IMPORTANTE: Usan .value!
     document.getElementById('det-dni').value = cliente.dni || "";
@@ -898,21 +930,36 @@ function abrirModalDetalles(cliente, prestamoForzado = null) {
     
     barra.style.width = `${porcentaje}%`;
 
-    // Cambiar color según el estado
-    const estadoLower = estadoRaw.toLowerCase();
-    
-    if (estadoLower.includes("al dia")) {
-        barra.style.backgroundColor = "#3b82f6"; // Azul
-    } else if (estadoLower.includes("finalizado")) {
-        barra.style.backgroundColor = "#22c55e"; // Verde
-    } else if (estadoLower.includes("atrasado")) {
-        barra.style.backgroundColor = "#ef4444"; // Rojo
-    }  else if (estadoLower.includes("vence")) {
-    barra.style.backgroundColor = "#f59e0b"; // Naranja
-}
-    else {
-        barra.style.backgroundColor = "#94a3b8"; // Gris por defecto (si no tiene préstamo)
+// Calcular el estado REAL de este préstamo específico
+let colorBarra = "#94a3b8"; // gris por defecto
+
+if (prestamo && cuotasTotales > 0) {
+    const hoyBarra = new Date();
+    hoyBarra.setHours(0, 0, 0, 0);
+    const manana = new Date(hoyBarra);
+    manana.setDate(manana.getDate() + 1);
+
+    let fechaProxima = new Date(prestamo.fecha_inicio + 'T00:00:00');
+    const intervalo = prestamo.intervalo_pago || 1;
+    const frecuencia = prestamo.frecuencia_pago || 'Mensual';
+    const proximaCuota = cuotasPagas + 1;
+
+    if (frecuencia === 'Diario') fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo));
+    else if (frecuencia === 'Semanal') fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo * 7));
+    else if (frecuencia === 'Mensual') fechaProxima.setMonth(fechaProxima.getMonth() + (proximaCuota * intervalo));
+
+    if (cuotasPagas >= cuotasTotales) {
+        colorBarra = "#22c55e"; // verde: finalizado
+    } else if (fechaProxima < hoyBarra) {
+        colorBarra = "#ef4444"; // rojo: atrasado
+    } else if (fechaProxima.toDateString() === manana.toDateString()) {
+        colorBarra = "#f59e0b"; // naranja: vence mañana
+    } else {
+        colorBarra = "#3b82f6"; // azul: al día
     }
+}
+
+barra.style.backgroundColor = colorBarra;
 
 // Botón "Editar Préstamo" dentro del Modal de Detalles
 const btnIrAEditarPrestamo = document.querySelector('.btn-editar-prestamo');

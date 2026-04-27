@@ -360,8 +360,8 @@ async function cargarGraficoClientes() {
             if (est.includes("atrasado") || est.includes("mora")) {
                 conteo.atrasado++;
                 totalReal++;
-            } else if (est.includes("vencer") || est.includes("manana") || est.includes("proximo")) {
-                conteo.porvencer++;
+                } else if (est.includes("vencer") || est.includes("manana") || est.includes("hoy") || est.includes("proximo")) {
+                    conteo.porvencer++;
                 totalReal++;
             } else if (est.includes("dia") || est.includes("activo")) {
                 conteo.aldia++;

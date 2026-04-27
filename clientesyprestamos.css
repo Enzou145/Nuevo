@@ -411,6 +411,7 @@ font-weight: 600;}
 .dot-filtro.naranja { background-color: #f59e0b; }
 .dot-filtro.rojo    { background-color: #ef4444; }
 .dot-filtro.verde   { background-color: #22c55e; }
+.dot-filtro.naranja-hoy { background-color: #ee840b; }
 .dot-filtro.blanco { background-color: #ffffff; border: 1px solid var(--borde-suave); }
 
 
@@ -646,6 +647,9 @@ font-weight: 600;}
     transform: translateY(-2px);
 }
 
+.status-vence-hoy { border-left: 6px solid #ee840b !important; }
+.avatar-vence-hoy    { background-color: #ee840b ; }
+
 /* HEADER DE LA TARJETA (Lo que siempre se ve) */
 .cliente-header {
     padding: 10px 8px;
@@ -847,6 +851,10 @@ color: #06b6d4;}
 .badge-al-dia       { background: rgba(59, 130, 246, 0.15); color: #2275fa ; border-color: #2275fa4d ; }
 .badge-finalizado   { background: var(--exito-fondo); color: var(--exito-texto); border-color: var(--exito-fondo); }
 .badge-vence-mañana { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: #f59f0b38;}
+.badge-vence-hoy {background: rgba(245, 158, 11, 0.15); color: #ee840b ; border-color: #f59f0b38;}
+.badge-sin-prestamo { background: rgba(167, 166, 166, 0.5); color: #ffffff; border:1px solid #e6e6e63b;}
+
+
 
 .chevron-detalle {
     transition: 0.3s;
@@ -2464,8 +2472,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .cliente-header { padding: 10px 12px; gap: 10px; }
     .cliente-info h3 { font-size: 13px; }
     .cliente-info p  { font-size: 12px; }
-    .cliente-avatar { width: 36px; height: 36px; font-size: 12px; }
-    .badge-estado { font-size: 0.5rem !important; padding: 3px 5px !important; }
+    .cliente-avatar { width: 36px; height: 36px; font-size: 12px; color: var(--fondo-tarjeta);}
+    .badge-estado { font-size: 0.5rem !important; padding: 3px 2px !important; }
 
     /* Botones de acción dentro de tarjeta */
     .acciones-card {  gap: 8px; }
