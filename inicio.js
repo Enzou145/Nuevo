@@ -290,6 +290,7 @@ async function cargarResumenCapital() {
         let totalMontoPrestadoHistorico = 0; 
         let totalRecaudadoHistorico = 0;    
         let totalAdeudaActual = 0;          
+        let totalMontoPrestadoActivo = 0; // Agregado para contar solo préstamos no finalizados
 
         prestamos.forEach(p => {
             const monto = Number(p.monto_prestado) || 0;
@@ -304,6 +305,9 @@ async function cargarResumenCapital() {
             if (p.estado_prestamo !== 'finalizado') {
                 const adeuda = totalDevolver - recaudado;
                 if (adeuda > 0) totalAdeudaActual += adeuda;
+                
+                // Sumamos el capital prestado solo de los no finalizados
+                totalMontoPrestadoActivo += monto;
             }
         });
 
@@ -312,8 +316,30 @@ async function cargarResumenCapital() {
 
         animarContador('total-fijo', CAPITAL_TOTAL_DINAMICO);
         animarContador('total-disponible', capitalTotalActual);
-        animarContador('total-prestado', totalMontoPrestadoHistorico);
+        // animarContador('total-prestado', totalMontoPrestadoActivo); // Usamos la variable de préstamos activos
         animarContador('total-recuperar', totalAdeudaActual);
+
+        // Novedades para las cards: Proyección
+        const proyeccion = capitalTotalActual + totalAdeudaActual;
+        const trendProyeccionEl = document.getElementById('trend-proyeccion');
+        if (trendProyeccionEl) {
+            trendProyeccionEl.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Proyección final: ${formatearMoneda(proyeccion)}`;
+        }
+
+        // Actualizar datos del modal de proyección
+        const gananciaFutura = proyeccion - CAPITAL_TOTAL_DINAMICO;
+        const modalProyeccionFinal = document.getElementById('modal-proyeccion-final');
+        const modalGananciaFutura = document.getElementById('modal-ganancia-futura');
+        if (modalProyeccionFinal) modalProyeccionFinal.textContent = formatearMoneda(proyeccion);
+        if (modalGananciaFutura) {
+            if (gananciaFutura >= 0) {
+                modalGananciaFutura.textContent = `+${formatearMoneda(gananciaFutura)}`;
+                modalGananciaFutura.style.color = "var(--exito-texto)";
+            } else {
+                modalGananciaFutura.textContent = formatearMoneda(gananciaFutura);
+                modalGananciaFutura.style.color = "var(--peligro-texto)";
+            }
+        }
 
     } catch (err) {
         console.error("Error en resumen:", err.message);
@@ -629,6 +655,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if(btnCerrarModal) btnCerrarModal.onclick = () => modalCapital.style.display = 'none';
+
+    // 2B. LÓGICA DEL MODAL DE PROYECCIÓN
+    const cardCapitalTotal = document.getElementById('card-capital-total');
+    const modalProyeccion = document.getElementById('modal-proyeccion');
+    const btnCloseProyeccion = document.getElementById('close-proyeccion');
+    const btnCerrarModalProyeccion = document.getElementById('btn-cerrar-modal-proyeccion');
+
+    if(cardCapitalTotal) {
+        cardCapitalTotal.onclick = () => {
+            modalProyeccion.style.display = 'flex';
+        };
+    }
+    
+    if(btnCloseProyeccion) btnCloseProyeccion.onclick = () => modalProyeccion.style.display = 'none';
+    if(btnCerrarModalProyeccion) btnCerrarModalProyeccion.onclick = () => modalProyeccion.style.display = 'none';
 
     if(formCapital) {
         formCapital.addEventListener('submit', async (e) => {

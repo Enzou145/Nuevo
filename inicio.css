@@ -232,78 +232,146 @@ body {
 }
 
 .card {
-    background-color: var(--fondo-tarjeta); /* Color gris suave de fondo de la imagen */
-    border-radius: 10px;       /* Bordes bien redondos como en la imagen */
-    padding: 10px;
-    border: none;              /* Quitamos el borde para usar solo sombra suave */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background-color: var(--fondo-tarjeta);
+    border-radius: 10px;
+    padding: 24px;
+    border: 1px solid var(--borde-suave);
+    box-shadow: var(--sombra-tarjeta);
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    transition: transform 0.2s;
+    gap: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.card-top {
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.tema-oscuro .card:hover {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 150%;
+    height: 150%;
+    border-radius: 50%;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card:hover::before {
+    opacity: 0.5;
+}
+
+.card-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-}
-
-.card-label {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #64748b; /* Color gris del texto secundario */
+    gap: 12px;
+    z-index: 1;
 }
 
 .card-icon {
-    width: 30px;
-    height: 22px;
-    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .card-icon svg {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
+}
+
+.card-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .card-valor {
-    font-size: 1.5rem; /* Tamaño grande para el monto */
+    font-size: 2.2rem;
     font-weight: 800;
-    margin-top: 5px;
+    text-align: center;
+    margin-top: 15px;
+    z-index: 1;
+    letter-spacing: -0.5px;
+}
+
+.card-footer {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(150, 150, 150, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.card-footer span{
+font-size: 10px;
+}
+
+#btn-cerrar-modal-proyeccion{
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #4c46e0, #5853f5);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+
+.card-trend {
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--exito-texto);
+}
+
+.card-trend.text-muted {
+    color: var(--texto-secundario);
+    font-weight: 500;
 }
 
 /* Modificadores Dinámicos */
 
-/* Azul / Violeta fuerte */
-.card--azul .card-label, .card--azul svg { color: var(--texto-secundario); }
-.card--azul .card-valor { color:var(--color-primario); }
+/* Azul */
+.card--azul .card-icon { background: var(--card-azul-bg); color: var(--card-azul-txt); }
+.card--azul .card-valor { color: var(--card-azul-txt); }
+.card--azul::before { background: radial-gradient(circle, var(--card-azul-bg) 0%, transparent 60%); }
 
-/* Naranja / Amarillo */
-.card--amarillo .card-label, .card--amarillo svg { color:var(--texto-secundario); }
-.card--amarillo .card-valor { color: #10b981; }
+/* Amarillo */
+.card--amarillo .card-icon { background: var(--card-amarillo-bg); color: var(--card-amarillo-txt); }
+.card--amarillo .card-valor { color: var(--card-amarillo-txt); }
+.card--amarillo::before { background: radial-gradient(circle, var(--card-amarillo-bg) 0%, transparent 60%); }
 
 /* Violeta */
-.card--violeta .card-label, .card--violeta svg { color: var(--texto-secundario); }
-.card--violeta .card-valor { color:  #3b82f6; }
+.card--violeta .card-icon { background: var(--card-violeta-bg); color: var(--card-violeta-txt); }
+.card--violeta .card-valor { color: var(--card-violeta-txt); }
+.card--violeta::before { background: radial-gradient(circle, var(--card-violeta-bg) 0%, transparent 60%); }
 
 /* Verde */
-.card--verde .card-label, .card--verde svg { color: var(--texto-secundario); }
-.card--verde .card-valor { color: #f59e0b; }
-
-/* Ajuste para que el icono no tenga fondo cuadrado, sino que sea simple */
-.card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.card-header {
-    display: flex;
-    align-items: center;
-}
+.card--verde .card-icon { background: var(--card-verde-bg); color: var(--card-verde-txt); }
+.card--verde .card-valor { color: var(--card-verde-txt); }
+.card--verde::before { background: radial-gradient(circle, var(--card-verde-bg) 0%, transparent 60%); }
 
 
 
