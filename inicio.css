@@ -1331,7 +1331,8 @@ margin-bottom: 15px;
         white-space: nowrap; /* Fuerza a que el título esté en una línea */
         letter-spacing: -0.2px;
         color: var(--texto-principal) !important;
-        font-weight: 400;
+        font-weight: 500;
+        font-family: "Inter" ,sans-serif;
     }
 
     .card-valor {
