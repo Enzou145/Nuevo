@@ -23,10 +23,10 @@ async function inicializarApp() {
         }
 
         const usuarioLogueado = JSON.parse(sesion);
-        
+
         // CORRECCIÓN CLAVE: Usamos la misma lógica que en tus funciones de cobros
         // Intentamos obtener el ID de autenticación de todas las formas posibles
-        const authId = usuarioLogueado?.auth_user_id || usuarioLogueado?.user?.id || usuarioLogueado?.id; 
+        const authId = usuarioLogueado?.auth_user_id || usuarioLogueado?.user?.id || usuarioLogueado?.id;
 
         if (!authId) {
             console.error("No se encontró el ID del usuario en la sesión");
@@ -85,7 +85,7 @@ async function inicializarApp() {
 
 // Función para agrupar las cargas y no repetir código
 function ejecutarCargasDashboard() {
-    cargarResumenCapital(); 
+    cargarResumenCapital();
     cargarGraficoClientes();
     cargarProximosCobros();
     cargarTopClientes();
@@ -102,20 +102,20 @@ function mostrarBienvenida(nombre) {
     const modal = document.getElementById('modal-bienvenida');
     const btn = document.getElementById('btn-comenzar-onboarding');
     const titulo = document.getElementById('titulo-bienvenida');
-    
+
     const primerNombre = nombre.split(' ')[0];
     titulo.innerText = `¡Bienvenido, ${primerNombre}!`;
-    
+
     modal.style.display = 'flex';
 
     btn.onclick = () => {
         modal.style.display = 'none';
-        
+
         // 2. HACER QUE LA TARJETA RESALTE
         const cardCapital = document.querySelector('.card-capital'); // Asegúrate que tu card tenga esta clase
         if (cardCapital) {
             cardCapital.classList.add('highlight-pulse');
-            
+
             // Opcional: El pulso se quita cuando el usuario hace clic en la tarjeta
             cardCapital.addEventListener('click', () => {
                 cardCapital.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Añade esto
@@ -144,7 +144,7 @@ async function cargarProximosCobros() {
                 cuotas_pagadas, 
                 intervalo_pago,
                 frecuencia_pago,
-                clientes (nombre, apellido)
+                clientes (nombre, apellido, telefono)
             `)
             .eq('user_id', userId)
             .neq('estado_prestamo', 'finalizado');
@@ -152,7 +152,7 @@ async function cargarProximosCobros() {
         if (error) throw error;
 
         const msgContenedor = document.getElementById('mensaje-asistente-cobros');
-        
+
         // --- CASO SIN PRÉSTAMOS ---
         if (!prestamos || prestamos.length === 0) {
             if (msgContenedor) {
@@ -172,7 +172,7 @@ async function cargarProximosCobros() {
             const cuotaSiguiente = (p.cuotas_pagadas || 0) + 1;
             const intervalo = p.intervalo_pago || 1;
             const frecuencia = (p.frecuencia_pago || "diario").toLowerCase();
-            
+
             let fechaVencimiento = new Date(p.fecha_inicio);
             fechaVencimiento.setMinutes(fechaVencimiento.getMinutes() + fechaVencimiento.getTimezoneOffset());
 
@@ -196,7 +196,8 @@ async function cargarProximosCobros() {
                 nombre: `${p.clientes.nombre} ${p.clientes.apellido}`,
                 monto: Math.round(p.valor_cuota),
                 diasFaltantes: diffDias,
-                estadoOriginal: p.estado_prestamo
+                estadoOriginal: p.estado_prestamo,
+                telefono: p.clientes.telefono || ""
             };
         });
 
@@ -277,7 +278,7 @@ async function cargarResumenCapital() {
     try {
         const usuarioLogueado = JSON.parse(localStorage.getItem("usuarioLogueado"));
         const userId = usuarioLogueado?.auth_user_id || usuarioLogueado?.id;
-        
+
         if (!userId) return;
 
         const { data: prestamos, error } = await supabaseClient
@@ -287,9 +288,9 @@ async function cargarResumenCapital() {
 
         if (error) throw error;
 
-        let totalMontoPrestadoHistorico = 0; 
-        let totalRecaudadoHistorico = 0;    
-        let totalAdeudaActual = 0;          
+        let totalMontoPrestadoHistorico = 0;
+        let totalRecaudadoHistorico = 0;
+        let totalAdeudaActual = 0;
         let totalMontoPrestadoActivo = 0; // Agregado para contar solo préstamos no finalizados
 
         prestamos.forEach(p => {
@@ -305,7 +306,7 @@ async function cargarResumenCapital() {
             if (p.estado_prestamo !== 'finalizado') {
                 const adeuda = totalDevolver - recaudado;
                 if (adeuda > 0) totalAdeudaActual += adeuda;
-                
+
                 // Sumamos el capital prestado solo de los no finalizados
                 totalMontoPrestadoActivo += monto;
             }
@@ -386,8 +387,8 @@ async function cargarGraficoClientes() {
             if (est.includes("atrasado") || est.includes("mora")) {
                 conteo.atrasado++;
                 totalReal++;
-                } else if (est.includes("vencer") || est.includes("manana") || est.includes("hoy") || est.includes("proximo")) {
-                    conteo.porvencer++;
+            } else if (est.includes("vencer") || est.includes("manana") || est.includes("hoy") || est.includes("proximo")) {
+                conteo.porvencer++;
                 totalReal++;
             } else if (est.includes("dia") || est.includes("activo")) {
                 conteo.aldia++;
@@ -400,7 +401,7 @@ async function cargarGraficoClientes() {
 
         // Actualizamos el centro de la torta con el nuevo total filtrado
         document.getElementById('torta-total').innerText = totalReal;
-        
+
         document.getElementById('num-aldia').innerText = conteo.aldia;
         document.getElementById('num-atrasados').innerText = conteo.atrasado;
         document.getElementById('num-sinprestamo').innerText = conteo.sinprestamo;
@@ -472,9 +473,21 @@ function renderizarListaCobros(lista) {
         const iconoReloj = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
         const iconoCalendario = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
 
+        let textoMensaje = "";
+        if (c.diasFaltantes < 0) {
+            const diasAbs = Math.abs(c.diasFaltantes);
+            textoMensaje = `venció hace ${diasAbs} día${diasAbs === 1 ? '' : 's'}`;
+        } else if (c.diasFaltantes === 0) {
+            textoMensaje = "vence hoy";
+        } else if (c.diasFaltantes === 1) {
+            textoMensaje = "vence mañana";
+        } else {
+            textoMensaje = `vence en ${c.diasFaltantes} días`;
+        }
+
         const li = document.createElement('li');
         li.className = `cobro-item ${esUrgente ? 'cobro-item--urgente' : ''} ${esAlerta ? 'cobro-item--alerta' : ''} ${esNormal ? 'cobro-item--normal' : ''}`;
-        
+
         li.innerHTML = `
             <div class="cobro-info">
                 <span class="cobro-nombre">${c.nombre}</span>
@@ -484,15 +497,25 @@ function renderizarListaCobros(lista) {
                     ${textoFecha}
                 </span>
             </div>
-            <span class="cobro-monto ${esUrgente ? 'cobro-monto--urgente' : ''} ${esAlerta ? 'cobro-monto--alerta' : ''} ${esNormal ? 'cobro-monto--normal' : ''}">
-                ${formatearMoneda(c.monto)}
-            </span>
+            <div style="display:flex; align-items:center; gap: 12px;">
+                <span class="cobro-monto ${esUrgente ? 'cobro-monto--urgente' : ''} ${esAlerta ? 'cobro-monto--alerta' : ''} ${esNormal ? 'cobro-monto--normal' : ''}">
+                    ${formatearMoneda(c.monto)}
+                </span>
+                ${c.telefono ? `
+                <a href="https://wa.me/${c.telefono.replace(/\D/g, '')}?text=${encodeURIComponent('Hola ' + c.nombre + ', te escribo para recordarte sobre tu pago de ' + formatearMoneda(c.monto) + ' que ' + textoMensaje + '. ¡Gracias!')}" 
+                   target="_blank" 
+                   title="Enviar WhatsApp"
+                   class="btn-whatsapp">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                </a>
+                ` : ''}
+            </div>
         `;
 
-        
+
         listaContenedor.appendChild(li);
 
-        
+
     });
 }
 
@@ -526,7 +549,7 @@ async function cargarTopClientes() {
         prestamos.forEach(p => {
             if (!p.clientes) return;
             const nombreCompleto = `${p.clientes.nombre} ${p.clientes.apellido}`;
-            
+
             if (!acumuladoClientes[nombreCompleto]) {
                 acumuladoClientes[nombreCompleto] = 0;
             }
@@ -543,22 +566,22 @@ async function cargarTopClientes() {
         // 4. Renderizamos en el HTML
         const listaContenedor = document.getElementById('lista-top-clientes');
         if (!listaContenedor) return;
-        
+
         listaContenedor.innerHTML = "";
 
-topArray.forEach((item, index) => {
-    const iniciales = item.nombre
-        .split(' ')
-        .filter(n => n.length > 0)
-        .map(n => n[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
+        topArray.forEach((item, index) => {
+            const iniciales = item.nombre
+                .split(' ')
+                .filter(n => n.length > 0)
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
 
-    const li = document.createElement('li');
-    li.className = 'top-item';
-    li.style.cursor = 'pointer';  // ← AGREGAR
-    li.innerHTML = `
+            const li = document.createElement('li');
+            li.className = 'top-item';
+            li.style.cursor = 'pointer';  // ← AGREGAR
+            li.innerHTML = `
         <div class="top-perfil">
             <div class="top-avatar">${iniciales}</div>
             <div class="top-detalles">
@@ -568,14 +591,14 @@ topArray.forEach((item, index) => {
         </div>
         <span class="top-monto">${formatearMoneda(item.total)}</span>
     `;
-    
-    // ← AGREGAR ESTO
-    li.onclick = () => {
-        window.location.href = `clientesyprestamos.html?cliente=${encodeURIComponent(item.nombre)}`;
-    };
-    
-    listaContenedor.appendChild(li);
-});
+
+            // ← AGREGAR ESTO
+            li.onclick = () => {
+                window.location.href = `clientesyprestamos.html?cliente=${encodeURIComponent(item.nombre)}`;
+            };
+
+            listaContenedor.appendChild(li);
+        });
         if (topArray.length === 0) {
             listaContenedor.innerHTML = `<p style="color:gray; font-size:12px; text-align:center; padding: 20px;">No hay préstamos activos</p>`;
         }
@@ -595,7 +618,7 @@ function animarContador(id, valorFinal, duracion = 1000) {
     let inicio = 0;
     const pasos = 60; // 60 frames por segundo
     const incremento = valorFinal / (duracion / (1000 / pasos));
-    
+
     const formatoMoneda = new Intl.NumberFormat('es-AR', {
         style: 'currency',
         currency: 'ARS',
@@ -622,14 +645,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. DISPARO ÚNICO DE LA APP
     inicializarApp();
 
-        // --- FORMATEO DINÁMICO DEL INPUT DE CAPITAL ---
+    // --- FORMATEO DINÁMICO DEL INPUT DE CAPITAL ---
     const inputCapitalValor = document.getElementById('input-capital-valor');
 
     if (inputCapitalValor) {
         inputCapitalValor.addEventListener('input', (e) => {
             // 1. Obtener solo los números
             let valor = e.target.value.replace(/\D/g, "");
-            
+
             // 2. Formatear con puntos de miles (es-AR usa el punto)
             if (valor) {
                 valor = parseInt(valor).toLocaleString('es-AR');
@@ -646,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formCapital = document.getElementById('form-capital');
     const btnCerrarModal = document.getElementById('close-capital');
 
-    if(cardCapitalFijo) {
+    if (cardCapitalFijo) {
         cardCapitalFijo.onclick = () => {
             // Al abrir, ya lo mostramos formateado
             document.getElementById('input-capital-valor').value = CAPITAL_TOTAL_DINAMICO.toLocaleString('es-AR');
@@ -654,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    if(btnCerrarModal) btnCerrarModal.onclick = () => modalCapital.style.display = 'none';
+    if (btnCerrarModal) btnCerrarModal.onclick = () => modalCapital.style.display = 'none';
 
     // 2B. LÓGICA DEL MODAL DE PROYECCIÓN
     const cardCapitalTotal = document.getElementById('card-capital-total');
@@ -662,22 +685,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCloseProyeccion = document.getElementById('close-proyeccion');
     const btnCerrarModalProyeccion = document.getElementById('btn-cerrar-modal-proyeccion');
 
-    if(cardCapitalTotal) {
+    if (cardCapitalTotal) {
         cardCapitalTotal.onclick = () => {
             modalProyeccion.style.display = 'flex';
         };
     }
-    
-    if(btnCloseProyeccion) btnCloseProyeccion.onclick = () => modalProyeccion.style.display = 'none';
-    if(btnCerrarModalProyeccion) btnCerrarModalProyeccion.onclick = () => modalProyeccion.style.display = 'none';
 
-    if(formCapital) {
+    if (btnCloseProyeccion) btnCloseProyeccion.onclick = () => modalProyeccion.style.display = 'none';
+    if (btnCerrarModalProyeccion) btnCerrarModalProyeccion.onclick = () => modalProyeccion.style.display = 'none';
+
+    if (formCapital) {
         formCapital.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             // LIMPIEZA CLAVE: Quitamos los puntos antes de convertir a número
             const valorConPuntos = document.getElementById('input-capital-valor').value;
-            const nuevoMonto = Number(valorConPuntos.replace(/\./g, '')); 
+            const nuevoMonto = Number(valorConPuntos.replace(/\./g, ''));
 
             const sesion = JSON.parse(localStorage.getItem("usuarioLogueado"));
             const authId = sesion?.auth_user_id || sesion?.user?.id || sesion?.id;
@@ -685,22 +708,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const { error } = await supabaseClient
                 .from('usuarios')
                 .update({ capital_inicial: nuevoMonto })
-                .eq('auth_user_id', authId); 
+                .eq('auth_user_id', authId);
 
             if (!error) {
                 CAPITAL_TOTAL_DINAMICO = nuevoMonto;
                 localStorage.setItem("capitalInicial", nuevoMonto); // Sincronizamos local
-                
+
                 modalCapital.style.display = 'none';
                 document.querySelector('.card-capital')?.classList.remove('highlight-pulse');
-                
+
                 // Abrir el siguiente paso si es onboarding
                 const modalGuia = document.getElementById("modal-guia-clientes");
                 if (modalGuia && localStorage.getItem("onboardingCompleto") !== "true") {
                     modalGuia.style.display = "flex";
                 }
 
-                cargarResumenCapital(); 
+                cargarResumenCapital();
             } else {
                 alert("Error al actualizar: " + error.message);
             }
@@ -727,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnTema) {
         // Cargar tema guardado
         if (localStorage.getItem('tema') === 'oscuro') document.body.classList.add('tema-oscuro');
-        
+
         btnTema.onclick = () => {
             const esOscuro = document.body.classList.toggle('tema-oscuro');
             localStorage.setItem('tema', esOscuro ? 'oscuro' : 'claro');
@@ -780,7 +803,7 @@ function formatearMonto(numero) {
 // INICIO (CONTROL ONBOARDING) - CORREGIDO
 // ===============================
 window.addEventListener("load", function () {
-     // Siempre ocultamos el modal aquí, lo maneja inicializarApp()
+    // Siempre ocultamos el modal aquí, lo maneja inicializarApp()
     modalBienvenida.style.display = "none";
     const capitalGuardado = localStorage.getItem("capitalInicial");
     const onboardingCompleto = localStorage.getItem("onboardingCompleto");
@@ -788,7 +811,7 @@ window.addEventListener("load", function () {
     // SI ya completó el onboarding O tiene capital > 0, NO mostrar modal
     if (onboardingCompleto === "true" || (capitalGuardado && parseInt(capitalGuardado, 10) > 0)) {
         modalBienvenida.style.display = "none";
-        
+
         if (capitalGuardado) {
             const numero = parseInt(capitalGuardado, 10);
             document.getElementById("total-fijo").textContent = formatearMonto(numero);
@@ -845,7 +868,7 @@ document.getElementById("btn-ir-clientes").addEventListener("click", function ()
     localStorage.setItem("onboardingCompleto", "true");
 
     // 2. Cerramos el modal correcto (modal-guia-clientes)
-    const modalGuia = document.getElementById("modal-guia-clientes"); 
+    const modalGuia = document.getElementById("modal-guia-clientes");
     if (modalGuia) {
         modalGuia.style.display = "none";
     }
