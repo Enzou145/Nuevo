@@ -488,6 +488,8 @@ function renderizarListaCobros(lista) {
         const li = document.createElement('li');
         li.className = `cobro-item ${esUrgente ? 'cobro-item--urgente' : ''} ${esAlerta ? 'cobro-item--alerta' : ''} ${esNormal ? 'cobro-item--normal' : ''}`;
 
+        const primerNombreCliente = c.nombre.split(' ')[0];
+
         li.innerHTML = `
             <div class="cobro-info">
                 <span class="cobro-nombre">${c.nombre}</span>
@@ -502,7 +504,7 @@ function renderizarListaCobros(lista) {
                     ${formatearMoneda(c.monto)}
                 </span>
                 ${c.telefono ? `
-                <a href="https://wa.me/${c.telefono.replace(/\D/g, '')}?text=${encodeURIComponent('Hola ' + c.nombre + ', te escribo para recordarte sobre tu pago de ' + formatearMoneda(c.monto) + ' que ' + textoMensaje + '. ¡Gracias!')}" 
+                <a href="https://wa.me/${c.telefono.replace(/\D/g, '')}?text=${encodeURIComponent('Hola ' + primerNombreCliente + ', te escribo para recordarte sobre tu pago de ' + formatearMoneda(c.monto) + ' que ' + textoMensaje + '. ¡Gracias!')}" 
                    target="_blank" 
                    title="Enviar WhatsApp"
                    class="btn-whatsapp">
