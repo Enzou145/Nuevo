@@ -43,33 +43,32 @@ export default async function handler(req, res) {
     });
 
     if (vencidosHoy.length > 0) {
-      const response = await fetch("https://onesignal.com/api/v1/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}`
-        },
-        body: JSON.stringify({
-          app_id: "69853c34-00e4-46ca-9d17-ef926cf8660f",
-          included_segments: ["Subscribed Users"],
-          // Agregamos "en" para que OneSignal no de error
-          headings: { 
-            "en": "⚠️ Cobros Vencidos",
-            "es": "⚠️ Cobros Vencidos" 
-          },
-          contents: { 
-            "en": `Hoy vencen cuotas de: ${vencidosHoy.join(', ')}`,
-            "es": `Hoy vencen cuotas de: ${vencidosHoy.join(', ')}` 
-          }
-        })
-    });
+      // Usamos Promise.all para enviar todas las notificaciones en paralelo y más rápido
+      const promesas = vencidosHoy.map(async (cliente) => {
+          const response = await fetch("https://onesignal.com/api/v1/notifications", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json; charset=utf-8",
+              "Authorization": `Basic ${process.env.ONESIGNAL_REST_API_KEY}`
+            },
+            body: JSON.stringify({
+              app_id: "69853c34-00e4-46ca-9d17-ef926cf8660f",
+              included_segments: ["Subscribed Users"],
+              priority: 10, // Forzar que despierte el celular e intente llegar inmediatamente
+              headings: { 
+                "en": "⚠️ Cobro Pendiente",
+                "es": "⚠️ Cobro Pendiente" 
+              },
+              contents: { 
+                "en": `La cuota de ${cliente} vence hoy o está atrasada.`,
+                "es": `La cuota de ${cliente} vence hoy o está atrasada.` 
+              }
+            })
+          });
+          return await response.json();
+      });
 
-      const oneSignalData = await response.json();
-      
-      // Si OneSignal devuelve un error, lo veremos en el navegador
-      if (!response.ok) {
-        return res.status(response.status).json({ error: "Error de OneSignal", details: oneSignalData });
-      }
+      const oneSignalData = await Promise.all(promesas);
 
       return res.status(200).json({ 
         success: true, 
