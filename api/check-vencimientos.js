@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     hoy.setHours(hoy.getHours() - 3);
     hoy.setHours(0, 0, 0, 0);
     let vencidosHoy = [];
+    let debugInfo = [];
 
     prestamos.forEach(p => {
       const cuotaSiguiente = (p.cuotas_pagadas || 0) + 1;
@@ -31,6 +32,14 @@ export default async function handler(req, res) {
       fechaVencimiento.setHours(0, 0, 0, 0);
       // Si la fecha de vencimiento es igual o menor a hoy (vence hoy o ya está atrasado)
       if (fechaVencimiento <= hoy) vencidosHoy.push(`${p.clientes.nombre} ${p.clientes.apellido}`);
+      
+      debugInfo.push({
+          cliente: p.clientes?.nombre,
+          frecuencia: frecuencia,
+          cuotaSiguiente: cuotaSiguiente,
+          fechaVencimientoCalculada: fechaVencimiento.toISOString(),
+          esMenorOIgualAHoy: fechaVencimiento <= hoy
+      });
     });
 
     if (vencidosHoy.length > 0) {
@@ -62,10 +71,19 @@ export default async function handler(req, res) {
         return res.status(response.status).json({ error: "Error de OneSignal", details: oneSignalData });
       }
 
-      return res.status(200).json({ success: true, informados: vencidosHoy, oneSignal: oneSignalData });
+      return res.status(200).json({ 
+        success: true, 
+        informados: vencidosHoy,
+        onesignal_response: oneSignalData,
+        debug: debugInfo
+      });
     }
 
-    return res.status(200).json({ success: true, informados: [] });
+    return res.status(200).json({ 
+        success: true, 
+        informados: vencidosHoy,
+        debug: debugInfo
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
