@@ -11,7 +11,9 @@ export default async function handler(req, res) {
 
     if (error) throw error;
 
+    // Ajustar fecha actual a la zona horaria de Argentina (UTC-3)
     const hoy = new Date();
+    hoy.setHours(hoy.getHours() - 3);
     hoy.setHours(0, 0, 0, 0);
     let vencidosHoy = [];
 
@@ -27,7 +29,8 @@ export default async function handler(req, res) {
       else if (frecuencia.includes("1 pago")) fechaVencimiento = new Date((p.fecha_fin || p.fecha_inicio) + 'T00:00:00');
 
       fechaVencimiento.setHours(0, 0, 0, 0);
-      if (fechaVencimiento < hoy) vencidosHoy.push(`${p.clientes.nombre} ${p.clientes.apellido}`);
+      // Si la fecha de vencimiento es igual o menor a hoy (vence hoy o ya está atrasado)
+      if (fechaVencimiento <= hoy) vencidosHoy.push(`${p.clientes.nombre} ${p.clientes.apellido}`);
     });
 
     if (vencidosHoy.length > 0) {
