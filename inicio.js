@@ -142,6 +142,7 @@ async function cargarProximosCobros() {
                 valor_cuota, 
                 estado_prestamo, 
                 fecha_inicio, 
+                fecha_fin,
                 cuotas_pagadas, 
                 intervalo_pago,
                 frecuencia_pago,
@@ -183,6 +184,9 @@ async function cargarProximosCobros() {
                 fechaVencimiento.setDate(fechaVencimiento.getDate() + (cuotaSiguiente * intervalo * 7));
             } else if (frecuencia.includes("mensual")) {
                 fechaVencimiento.setMonth(fechaVencimiento.getMonth() + (cuotaSiguiente * intervalo));
+            } else if (frecuencia.includes("1 pago")) {
+                fechaVencimiento = new Date(p.fecha_fin || p.fecha_inicio);
+                fechaVencimiento.setMinutes(fechaVencimiento.getMinutes() + fechaVencimiento.getTimezoneOffset());
             }
 
             fechaVencimiento.setHours(0, 0, 0, 0);

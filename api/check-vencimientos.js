@@ -24,6 +24,7 @@ export default async function handler(req, res) {
       if (frecuencia.includes("diario")) fechaVencimiento.setDate(fechaVencimiento.getDate() + (cuotaSiguiente * intervalo));
       else if (frecuencia.includes("semanal")) fechaVencimiento.setDate(fechaVencimiento.getDate() + (cuotaSiguiente * intervalo * 7));
       else if (frecuencia.includes("mensual")) fechaVencimiento.setMonth(fechaVencimiento.getMonth() + (cuotaSiguiente * intervalo));
+      else if (frecuencia.includes("1 pago")) fechaVencimiento = new Date((p.fecha_fin || p.fecha_inicio) + 'T00:00:00');
 
       fechaVencimiento.setHours(0, 0, 0, 0);
       if (fechaVencimiento < hoy) vencidosHoy.push(`${p.clientes.nombre} ${p.clientes.apellido}`);

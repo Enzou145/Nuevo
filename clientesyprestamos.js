@@ -105,6 +105,19 @@ async function cargarClientesDB() {
         console.error("Error cargando clientes:", error);
         return;
     }
+    
+    const { data: pagosData, error: pagosError } = await supabaseClient
+        .from('pagos')
+        .select('prestamo_id, monto_pagado')
+        .eq('user_id', usuarioLogueado.auth_user_id);
+        
+    const pagosPorPrestamo = {};
+    if (pagosData && !pagosError) {
+        pagosData.forEach(p => {
+            if (!pagosPorPrestamo[p.prestamo_id]) pagosPorPrestamo[p.prestamo_id] = 0;
+            pagosPorPrestamo[p.prestamo_id] += Number(p.monto_pagado) || 0;
+        });
+    }
 
     // 1. Guardamos la data en nuestra variable local
     clientes = data || [];
@@ -117,6 +130,12 @@ async function cargarClientesDB() {
     // 2. Procesamos cada cliente para determinar su estado real
     for (const cliente of clientes) {
         const misPrestamos = cliente.prestamos || [];
+        misPrestamos.forEach(p => {
+            const sumPagos = pagosPorPrestamo[p.id] || 0;
+            const pagadoBaseEntero = (p.cuotas_pagadas || 0) * (p.valor_cuota || 1);
+            p.pagadoRealCalculado = Math.max(sumPagos, pagadoBaseEntero);
+        });
+
         
         // CASO A: No tiene ningún préstamo registrado
         if (misPrestamos.length === 0) {
@@ -155,6 +174,8 @@ async function cargarClientesDB() {
                 fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo * 7));
             } else if (frecuencia === 'Mensual') {
                 fechaProxima.setMonth(fechaProxima.getMonth() + (proximaCuota * intervalo));
+            } else if (frecuencia === '1 Pago') {
+                fechaProxima = new Date((prestamo.fecha_fin || prestamo.fecha_inicio) + 'T00:00:00');
             }
 
             let estadoEstePrestamo = 'al dia';
@@ -255,9 +276,9 @@ function renderizarPagina() {
         // 2. ELEGIMOS QUÉ MOSTRAR EN LA BARRA DE PROGRESO
         const pPrincipal = prestamosActivos.length > 0 ? prestamosActivos[0] : misPrestamos[misPrestamos.length - 1];
 
-        // 3. CALCULAMOS DEUDA TOTAL REAL
+        // 3. CALCULAMOS DEUDA TOTAL REAL CON FRACCIONES
         const deudaTotal = misPrestamos.reduce((acc, p) => {
-            const saldo = p.total_devolver - (p.cuotas_pagadas * p.valor_cuota);
+            const saldo = p.total_devolver - (p.pagadoRealCalculado || 0);
             return acc + (saldo > 0 ? saldo : 0);
         }, 0);
 
@@ -699,11 +720,34 @@ function abrirSelectorPrestamos(cliente, prestamos) {
    LÓGICA DE LA CALCULADORA DE CUOTAS
    ========================================== */
 
-function mostrarInterfazCobro(cliente, prestamo) {
+async function mostrarInterfazCobro(cliente, prestamo) {
     // Guardamos qué préstamo se está operando globalmente
     clienteSeleccionado = cliente;
     prestamoSeleccionado = prestamo; 
-    cuotasAPagar = 1;
+
+    // Obtener la suma real de pagos
+    const { data: pagos, error } = await supabaseClient
+        .from('pagos')
+        .select('monto_pagado')
+        .eq('prestamo_id', prestamo.id);
+        
+    let totalPagadoMoneda = 0;
+    if (pagos && !error) {
+        totalPagadoMoneda = pagos.reduce((acc, p) => acc + (Number(p.monto_pagado) || 0), 0);
+    }
+    
+    // Por si no hay historial de pagos, tomamos el valor base
+    const pagadoBaseEntero = (prestamo.cuotas_pagadas || 0) * (prestamo.valor_cuota || 1);
+    const pagadoReal = Math.max(totalPagadoMoneda, pagadoBaseEntero);
+    prestamo.pagadoRealCalculado = pagadoReal; // Store for + and - buttons
+    const pagadasExactas = pagadoReal / (prestamo.valor_cuota || 1);
+
+    const totales = prestamo.cuotas_totales || 0;
+    
+    let pagadasMostrar = pagadasExactas;
+    if (pagadasMostrar > totales) pagadasMostrar = totales;
+
+    const pagadasEntero = Math.floor(pagadasMostrar);
 
     // 1. Nombre del cliente
     document.getElementById('nombreClienteCobro').innerText = `${cliente.nombre} ${cliente.apellido || ''}`;
@@ -714,20 +758,40 @@ function mostrarInterfazCobro(cliente, prestamo) {
     document.getElementById('cobroCuota').innerText = formatearMoneda(prestamo.valor_cuota);
     
     // 3. Progreso de cuotas
-    const pagadas = prestamo.cuotas_pagadas || 0;
-    const totales = prestamo.cuotas_totales || 0;
-    document.getElementById('cobroProgreso').innerText = `${pagadas}/${totales}`;
-    document.getElementById('textoProgresoCobro').innerText = `${pagadas} DE ${totales} CUOTAS`;
+    document.getElementById('cobroProgreso').innerText = `${pagadasEntero}/${totales}`;
+    document.getElementById('textoProgresoCobro').innerText = `${pagadasEntero} DE ${totales} CUOTAS`;
 
     // 4. Barra de progreso visual
-    const porcentaje = totales > 0 ? (pagadas / totales) * 100 : 0;
+    let porcentaje = totales > 0 ? (pagadasMostrar / totales) * 100 : 0;
+    if (porcentaje > 100) porcentaje = 100;
     document.getElementById('barraProgresoCobro').style.width = `${porcentaje}%`;
     document.getElementById('porcentajeCobro').innerText = `${Math.round(porcentaje)}%`;
 
-    // 5. Calcular el total inicial (1 cuota)
+    // 5. Calcular el total inicial (fracción restante)
+    let fraccionRestante = 1 - (pagadasExactas % 1);
+    if (fraccionRestante < 0.001 || fraccionRestante > 0.999) {
+        fraccionRestante = 1;
+    }
+    
+    const maxAPagar = (prestamo.total_devolver || 0) - pagadoReal;
+    if (maxAPagar <= 0) {
+        cuotasAPagar = 0;
+    } else {
+        cuotasAPagar = fraccionRestante;
+        if (cuotasAPagar * prestamo.valor_cuota > maxAPagar) {
+            cuotasAPagar = maxAPagar / prestamo.valor_cuota;
+        }
+    }
     actualizarCalculoCobro();
     
-    // 6. Abrir modal
+    // 6. Resetear el botón de confirmar pago
+    const btnConfirmar = document.querySelector('.btn-confirmar-final');
+    if (btnConfirmar) {
+        btnConfirmar.disabled = false;
+        btnConfirmar.innerText = "CONFIRMAR PAGO";
+    }
+
+    // 7. Abrir modal
     document.getElementById('modalCobrarCuota').classList.add('active');
 }
 
@@ -737,28 +801,63 @@ function actualizarCalculoCobro() {
     const prestamo = prestamoSeleccionado;
     if (!prestamo) return;
 
-    displayCant.innerText = cuotasAPagar;
+    displayCant.innerText = Math.floor(cuotasAPagar);
 
     const total = cuotasAPagar * prestamo.valor_cuota;
 
-    displayMontoFinal.innerText = `$ ${total.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
+    displayMontoFinal.value = Math.round(total);
 }
+
+// Evento para editar el monto manualmente
+displayMontoFinal.addEventListener('input', (e) => {
+    if (!prestamoSeleccionado) return;
+    const montoManual = Number(e.target.value) || 0;
+    cuotasAPagar = montoManual / prestamoSeleccionado.valor_cuota;
+    displayCant.innerText = Math.floor(cuotasAPagar);
+});
 
 // Botón +
 document.getElementById('btnMas').onclick = () => {
-    const restantes = prestamoSeleccionado.cuotas_totales - prestamoSeleccionado.cuotas_pagadas;
-
-    if (cuotasAPagar < restantes) {
-        cuotasAPagar++;
-        actualizarCalculoCobro();
+    if (!prestamoSeleccionado) return;
+    const totalPagado = prestamoSeleccionado.pagadoRealCalculado || (prestamoSeleccionado.cuotas_pagadas * prestamoSeleccionado.valor_cuota);
+    const maxAPagar = prestamoSeleccionado.total_devolver - totalPagado;
+    
+    let nuevoMonto = Math.round(cuotasAPagar * Number(prestamoSeleccionado.valor_cuota)) + Number(prestamoSeleccionado.valor_cuota);
+    
+    if (maxAPagar <= 0) {
+        nuevoMonto = 0;
+    } else if (nuevoMonto > maxAPagar) {
+        nuevoMonto = maxAPagar;
     }
+    cuotasAPagar = nuevoMonto / prestamoSeleccionado.valor_cuota;
+    actualizarCalculoCobro();
 };
+
 // Botón -
 document.getElementById('btnMenos').onclick = () => {
-    if (cuotasAPagar > 1) {
-        cuotasAPagar--;
+    if (!prestamoSeleccionado) return;
+    const totalPagado = prestamoSeleccionado.pagadoRealCalculado || (prestamoSeleccionado.cuotas_pagadas * prestamoSeleccionado.valor_cuota);
+    const maxAPagar = prestamoSeleccionado.total_devolver - totalPagado;
+    
+    if (maxAPagar <= 0) {
+        cuotasAPagar = 0;
         actualizarCalculoCobro();
+        return;
     }
+    
+    const pagadasExactas = totalPagado / prestamoSeleccionado.valor_cuota;
+    
+    let fraccionRestante = 1 - (pagadasExactas % 1);
+    if (fraccionRestante < 0.001 || fraccionRestante > 0.999) fraccionRestante = 1;
+
+    let nuevoMonto = Math.round(cuotasAPagar * Number(prestamoSeleccionado.valor_cuota)) - Number(prestamoSeleccionado.valor_cuota);
+    const montoMinimo = Math.round(fraccionRestante * prestamoSeleccionado.valor_cuota);
+
+    if (nuevoMonto < montoMinimo) {
+        nuevoMonto = montoMinimo;
+    }
+    cuotasAPagar = nuevoMonto / prestamoSeleccionado.valor_cuota;
+    actualizarCalculoCobro();
 };
 
 
@@ -767,61 +866,117 @@ document.getElementById('btnMenos').onclick = () => {
 // Botón Confirmar Pago (Corregido para evaluar estado global)
 document.querySelector('.btn-confirmar-final').onclick = async () => {
     if (!clienteSeleccionado || !prestamoSeleccionado) return;
+    const btnConfirmar = document.querySelector('.btn-confirmar-final');
 
-    const prestamo = prestamoSeleccionado;
-    const nuevasPagadas = prestamo.cuotas_pagadas + cuotasAPagar;
-    const esPrestamoFinalizado = nuevasPagadas >= prestamo.cuotas_totales;
+    try {
+        const prestamo = prestamoSeleccionado;
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerText = "PROCESANDO...";
+        console.log("Iniciando proceso de cobro...");
 
-    // 1. ACTUALIZAR EL PRÉSTAMO ESPECÍFICO
-    const { error: errorPrestamo } = await supabaseClient
-        .from('prestamos')
-        .update({
-            cuotas_pagadas: nuevasPagadas,
-            estado_prestamo: esPrestamoFinalizado ? 'finalizado' : 'activo'
-        })
-        .eq('id', prestamo.id);
+        // 1. Obtener pagos reales actuales
+        console.log("Consultando pagos...");
+        const { data: pagos, error: errPagos } = await supabaseClient
+            .from('pagos')
+            .select('monto_pagado')
+            .eq('prestamo_id', prestamo.id);
+            
+        console.log("Pagos obtenidos:", pagos, "Error:", errPagos);
+        if (errPagos) throw new Error("Error al obtener pagos: " + errPagos.message);
 
-    if (errorPrestamo) {
-        console.error("Error al actualizar préstamo:", errorPrestamo);
-        return;
+        let totalPagadoMoneda = 0;
+        if (pagos) {
+            totalPagadoMoneda = pagos.reduce((acc, p) => acc + (Number(p.monto_pagado) || 0), 0);
+        }
+        const pagadoBaseEntero = (prestamo.cuotas_pagadas || 0) * (prestamo.valor_cuota || 1);
+        const pagadoActual = Math.max(totalPagadoMoneda, pagadoBaseEntero);
+        
+        // Usar monto directamente de la UI para exactitud
+        const montoPagarAhora = Number(document.getElementById('montoFinalPagar').value) || 0;
+        const nuevoPagadoTotal = pagadoActual + montoPagarAhora;
+        
+        const nuevasPagadasEntero = Math.floor(nuevoPagadoTotal / prestamo.valor_cuota);
+        const esPrestamoFinalizado = nuevasPagadasEntero >= prestamo.cuotas_totales;
+
+        const cuotasCompletadasAhora = nuevasPagadasEntero - Math.floor(pagadoActual / prestamo.valor_cuota);
+
+        console.log("Valores calculados:", { pagadoActual, montoPagarAhora, nuevoPagadoTotal, nuevasPagadasEntero, cuotasCompletadasAhora });
+
+        // ACTUALIZAR EL PRÉSTAMO ESPECÍFICO
+        console.log("Actualizando prestamo...");
+        const { error: errorPrestamo } = await supabaseClient
+            .from('prestamos')
+            .update({
+                cuotas_pagadas: nuevasPagadasEntero,
+                estado_prestamo: esPrestamoFinalizado ? 'finalizado' : 'activo'
+            })
+            .eq('id', prestamo.id);
+
+        console.log("Update prestamo resultado. Error:", errorPrestamo);
+        if (errorPrestamo) throw new Error("Error en prestamo: " + errorPrestamo.message);
+
+        // GUARDAR EL REGISTRO DEL PAGO
+        console.log("Insertando en tabla pagos...");
+        
+        // Calculamos el monto pagar sacandolo directo del input para evitar desajustes de fraccion
+        const montoIngresadoUI = Number(document.getElementById('montoFinalPagar').value) || 0;
+        
+        const payloadPago = {
+            user_id: usuarioLogueado.auth_user_id,
+            prestamo_id: prestamo.id,
+            monto_pagado: montoIngresadoUI,
+            cantidad_cuotas_pagadas: cuotasCompletadasAhora
+        };
+        console.log("Payload pago:", payloadPago);
+        
+        const { error: errorInsertPago } = await supabaseClient.from('pagos').insert([payloadPago]);
+
+        console.log("Insert pago resultado. Error:", errorInsertPago);
+        if (errorInsertPago) throw new Error("Error al guardar registro de pago: " + errorInsertPago.message);
+
+        // 3. REVISAR ESTADO GLOBAL DEL CLIENTE
+        console.log("Revisando estado global del cliente...");
+        const { data: todosLosPrestamos, error: errPrestamos } = await supabaseClient
+            .from('prestamos')
+            .select('cuotas_pagadas, cuotas_totales')
+            .eq('cliente_id', clienteSeleccionado.id);
+
+        console.log("Todos los prestamos:", todosLosPrestamos, "Error:", errPrestamos);
+        if (errPrestamos) throw new Error("Error al consultar estado global: " + errPrestamos.message);
+
+        let nuevoEstadoCliente = 'finalizado';
+        if (todosLosPrestamos && todosLosPrestamos.length > 0) {
+            const tienePrestamosActivos = todosLosPrestamos.some(p => 
+                (p.cuotas_pagadas || 0) < (p.cuotas_totales || 0)
+            );
+            nuevoEstadoCliente = tienePrestamosActivos ? 'al dia' : 'finalizado';
+        }
+
+        // 4. ACTUALIZAR EL ESTADO DEL CLIENTE EN LA TABLA CLIENTES
+        console.log("Actualizando estado cliente a:", nuevoEstadoCliente);
+        const { error: errUpdateCliente } = await supabaseClient
+            .from('clientes')
+            .update({ estado: nuevoEstadoCliente })
+            .eq('id', clienteSeleccionado.id);
+            
+        console.log("Update cliente resultado. Error:", errUpdateCliente);
+        if (errUpdateCliente) throw new Error("Error actualizando cliente: " + errUpdateCliente.message);
+
+        // FINALIZAR PROCESO
+        console.log("Finalizado con exito.");
+        alert("✅ Pago registrado con éxito");
+        document.getElementById('modalCobrarCuota').classList.remove('active');
+        
+        console.log("Recargando DB...");
+        await cargarClientesDB();
+        console.log("DB recargada.");
+
+    } catch (e) {
+        console.error("Error capturado en TRY-CATCH:", e);
+        alert(e.message);
+        btnConfirmar.disabled = false;
+        btnConfirmar.innerText = "CONFIRMAR PAGO";
     }
-
-    // 2. GUARDAR EL REGISTRO DEL PAGO
-    await supabaseClient.from('pagos').insert([{
-        user_id: usuarioLogueado.auth_user_id,
-        prestamo_id: prestamo.id,
-        monto_pagado: cuotasAPagar * prestamo.valor_cuota,
-        cantidad_cuotas_pagadas: cuotasAPagar
-    }]);
-
-    // 3. REVISAR ESTADO GLOBAL DEL CLIENTE
-    // Traemos todos los préstamos para ver si queda alguno activo
-    const { data: todosLosPrestamos } = await supabaseClient
-        .from('prestamos')
-        .select('cuotas_pagadas, cuotas_totales')
-        .eq('cliente_id', clienteSeleccionado.id);
-
-    // Un cliente sigue activo si tiene al menos un préstamo donde las pagadas sean menos que las totales
-    const tienePrestamosActivos = todosLosPrestamos.some(p => 
-        (p.cuotas_pagadas || 0) < (p.cuotas_totales || 0)
-    );
-
-    // Solo si NO tiene activos, el estado es 'finalizado'
-    // Si tiene activos, lo dejamos 'al dia' (la función cargarClientesDB luego precisará si es 'atrasado')
-    const nuevoEstadoCliente = tienePrestamosActivos ? 'al dia' : 'finalizado';
-
-    // 4. ACTUALIZAR EL ESTADO DEL CLIENTE EN LA TABLA CLIENTES
-    await supabaseClient
-        .from('clientes')
-        .update({ estado: nuevoEstadoCliente })
-        .eq('id', clienteSeleccionado.id);
-
-    // FINALIZAR PROCESO
-    alert("✅ Pago registrado con éxito");
-    modalCobro.classList.remove('active');
-
-    // Refrescamos la base de datos local y la interfaz
-    await cargarClientesDB();
 };
 
 // Botón Cerrar
@@ -885,6 +1040,7 @@ if (prestamoParaBadge) {
         if (frecuencia === 'Diario') fechaProx.setDate(fechaProx.getDate() + (proxNum * intervalo));
         else if (frecuencia === 'Semanal') fechaProx.setDate(fechaProx.getDate() + (proxNum * intervalo * 7));
         else if (frecuencia === 'Mensual') fechaProx.setMonth(fechaProx.getMonth() + (proxNum * intervalo));
+        else if (frecuencia === '1 Pago') fechaProx = new Date((prestamoParaBadge.fecha_fin || prestamoParaBadge.fecha_inicio) + 'T00:00:00');
 
         if (fechaProx < hoyB) estadoCalculado = 'atrasado';
         else if (fechaProx.toDateString() === hoyB.toDateString()) estadoCalculado = 'vence hoy';
@@ -947,6 +1103,7 @@ if (prestamo && cuotasTotales > 0) {
     if (frecuencia === 'Diario') fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo));
     else if (frecuencia === 'Semanal') fechaProxima.setDate(fechaProxima.getDate() + (proximaCuota * intervalo * 7));
     else if (frecuencia === 'Mensual') fechaProxima.setMonth(fechaProxima.getMonth() + (proximaCuota * intervalo));
+    else if (frecuencia === '1 Pago') fechaProxima = new Date((prestamo.fecha_fin || prestamo.fecha_inicio) + 'T00:00:00');
 
     if (cuotasPagas >= cuotasTotales) {
         colorBarra = "#22c55e"; // verde: finalizado
@@ -990,7 +1147,9 @@ function abrirEdicionPrestamo(cliente, prestamo) {
 
     // 2. Marcar el botón de frecuencia correcto
     document.querySelectorAll('.oto-frec-btn').forEach(btn => {
-        btn.classList.toggle('oto-frec-active', btn.dataset.value === prestamo.frecuencia_pago);
+        const isActive = btn.dataset.value === prestamo.frecuencia_pago;
+        btn.classList.toggle('oto-frec-active', isActive);
+        if (isActive) seleccionarFrecuencia(btn);
     });
 
     // 3. Cambiar el texto del botón de acción
@@ -1009,6 +1168,11 @@ function abrirEdicionPrestamo(cliente, prestamo) {
     historialDiv.innerHTML = ''; // Limpiar contenido previo
 
     if (prestamo && cuotasTotales > 0) {
+        const pagadasExactas = (prestamo.pagadoRealCalculado || (prestamo.cuotas_pagadas * prestamo.valor_cuota) || 0) / (prestamo.valor_cuota || 1);
+        const cuotaParcialIndex = Math.floor(pagadasExactas) + 1;
+        const fraccionPagada = pagadasExactas % 1;
+        const faltaPagar = Math.round((1 - fraccionPagada) * prestamo.valor_cuota);
+
         for (let i = 1; i <= cuotasTotales; i++) {
             // Calcular fecha de cada cuota
             let fechaCuota = new Date(prestamo.fecha_inicio + 'T00:00:00');
@@ -1018,14 +1182,19 @@ function abrirEdicionPrestamo(cliente, prestamo) {
             if (frecuencia === "Diario") fechaCuota.setDate(fechaCuota.getDate() + (i * intervalo));
             else if (frecuencia === "Semanal") fechaCuota.setDate(fechaCuota.getDate() + (i * intervalo * 7));
             else if (frecuencia === "Mensual") fechaCuota.setMonth(fechaCuota.getMonth() + (i * intervalo));
+            else if (frecuencia === "1 Pago") fechaCuota = new Date((prestamo.fecha_fin || prestamo.fecha_inicio) + 'T00:00:00');
 
-            const estaPagada = i <= cuotasPagas;
+            const estaPagada = i <= Math.floor(pagadasExactas);
 
-            // ← AGREGAR ESTO
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
             const estaAtrasada = !estaPagada && fechaCuota < hoy;
-
+            
+            let textoPendiente = estaPagada ? 'PAGADA' : estaAtrasada ? 'ATRASADO' : 'PENDIENTE';
+            
+            if (!estaPagada && i === cuotaParcialIndex && fraccionPagada > 0.001) {
+                textoPendiente = `PENDIENTE (falta $${faltaPagar.toLocaleString('es-AR')})`;
+            }
 
             // Crear el elemento de la cuota con el estilo de la imagen
             const item = document.createElement('div');
@@ -1038,7 +1207,7 @@ function abrirEdicionPrestamo(cliente, prestamo) {
                 <div class="cuota-monto-status">
                     <p class="cuota-monto">$ ${Math.round(valorCuota).toLocaleString('es-AR', {maximumFractionDigits: 0})}</p>
                         <span class="badge-cuota ${estaPagada ? 'pagada' : estaAtrasada ? 'atrasada' : 'pendiente'}">
-                        ${estaPagada ? 'PAGADA' : estaAtrasada ? 'ATRASADO' : 'PENDIENTE'}
+                        ${textoPendiente}
                     </span>
                 </div>
             `;
@@ -1192,9 +1361,10 @@ function prepararOtorgar(cliente) {
 
     // 4. Sincronizar Frecuencia: Por defecto "Diario" (o la que prefieras)
     document.querySelectorAll('.oto-frec-btn').forEach(btn => {
-        btn.classList.toggle('oto-frec-active', btn.dataset.value === 'diario');
+        const isActive = btn.dataset.value === 'Diario';
+        btn.classList.toggle('oto-frec-active', isActive);
+        if (isActive) seleccionarFrecuencia(btn);
     });
-    document.getElementById('oto-frec-tipo').value = 'diario';
 
     // 5. Fecha Inicio: Hoy
     const inputFecha = document.getElementById('oto-fecha-inicio');
@@ -1214,6 +1384,18 @@ function seleccionarFrecuencia(btn) {
     document.querySelectorAll('#modalOtorgar .oto-frec-btn').forEach(b => b.classList.remove('oto-frec-active'));
     btn.classList.add('oto-frec-active');
     document.getElementById('oto-frec-tipo').value = btn.dataset.value;
+    
+    const inputFechaFin = document.getElementById('oto-fecha-fin');
+    const inputCuotas = document.getElementById('oto-cuotas');
+    if (btn.dataset.value === "1 Pago") {
+        inputFechaFin.removeAttribute('readonly');
+        inputCuotas.value = 1;
+        inputCuotas.setAttribute('readonly', 'true');
+    } else {
+        inputFechaFin.setAttribute('readonly', 'true');
+        inputCuotas.removeAttribute('readonly');
+    }
+    
     calcularPrestamo();
 }
 
@@ -1307,6 +1489,11 @@ function cerrarModalOtorgar() {
 function ajustar(id, cambio) {
     const input = document.getElementById(id);
     if (!input) return;
+    
+    if (id === 'oto-cuotas' && document.getElementById('oto-frec-tipo').value === "1 Pago") {
+        return; // No permite cambiar cuotas en 1 Pago
+    }
+
     let valor = parseInt(input.value) || 0;
     valor += cambio;
     if (valor < 1) valor = 1; // No permite valores menores a 1
@@ -1344,19 +1531,24 @@ function calcularPrestamo() {
     const valorCuota = totalADevolver / cuotas;
 
     if (fechaInicioStr) {
-        let fechaFin = new Date(fechaInicioStr + 'T00:00:00');
-        
-        // CORRECCIÓN DE FECHA: Ahora calculamos el fin sumando todos los intervalos
-        // Si hay 1 cuota diaria, se suma 1 día.
-        if (frecuencia === "Diario") {
-            fechaFin.setDate(fechaFin.getDate() + (cuotas * cadaX));
-        } else if (frecuencia === "Semanal") {
-            fechaFin.setDate(fechaFin.getDate() + (cuotas * cadaX * 7));
-        } else if (frecuencia === "Mensual") {
-            fechaFin.setMonth(fechaFin.getMonth() + (cuotas * cadaX));
+        if (frecuencia === "1 Pago") {
+            if (!document.getElementById('oto-fecha-fin').value) {
+                document.getElementById('oto-fecha-fin').value = fechaInicioStr;
+            }
+        } else {
+            let fechaFin = new Date(fechaInicioStr + 'T00:00:00');
+            
+            // CORRECCIÓN DE FECHA: Ahora calculamos el fin sumando todos los intervalos
+            if (frecuencia === "Diario") {
+                fechaFin.setDate(fechaFin.getDate() + (cuotas * cadaX));
+            } else if (frecuencia === "Semanal") {
+                fechaFin.setDate(fechaFin.getDate() + (cuotas * cadaX * 7));
+            } else if (frecuencia === "Mensual") {
+                fechaFin.setMonth(fechaFin.getMonth() + (cuotas * cadaX));
+            }
+            
+            document.getElementById('oto-fecha-fin').value = fechaFin.toISOString().split('T')[0];
         }
-        
-        document.getElementById('oto-fecha-fin').value = fechaFin.toISOString().split('T')[0];
     }
 
     document.getElementById('res-total').innerText = `$ ${totalADevolver.toLocaleString('es-AR', {maximumFractionDigits: 0})}`;
