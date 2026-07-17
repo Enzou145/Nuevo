@@ -51,7 +51,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           app_id: "69853c34-00e4-46ca-9d17-ef926cf8660f",
-          included_segments: ["Total Subscriptions"],
+          included_segments: ["Subscribed Users"],
           // Agregamos "en" para que OneSignal no de error
           headings: { 
             "en": "⚠️ Cobros Vencidos",
